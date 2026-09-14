@@ -13,7 +13,6 @@ export default function Sparkline({ points = [], isPositive = true, width = 110,
   const max = Math.max(...points);
   const range = max - min || 1;
 
-  // Normalizar coordenadas
   const coords = points.map((val, idx) => {
     const x = (idx / (points.length - 1)) * (width - 4) + 2;
     const y = height - ((val - min) / range) * (height - 8) - 4;

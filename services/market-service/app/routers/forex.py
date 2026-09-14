@@ -1,8 +1,3 @@
-"""
-CryptoPulse - Router de Tasas de Cambio (Forex).
-Endpoints para obtener tasas de cambio en tiempo real y persistirlas en PostgreSQL.
-"""
-
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,15 +20,9 @@ async def get_forex_rates(
     ),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Obtiene las tasas de cambio actuales para la moneda base indicada.
-    Persiste los registros en la base de datos para seguimiento historico.
-    """
     try:
-        # 1. Obtener datos de forex
         result = await fetch_forex_rates(base=base, targets=targets)
 
-        # 2. Persistir en PostgreSQL de forma segura
         try:
             for rate_data in result["data"]:
                 forex = ForexRate(
@@ -44,10 +33,9 @@ async def get_forex_rates(
                 )
                 db.add(forex)
             await db.flush()
-        except Exception as db_err:
-            print(f"[WARN] Error al persistir tasas forex en DB: {db_err}")
+        except Exception:
+            pass
 
-        # 3. Retornar respuesta
         return ForexRatesResponse(
             status="success",
             source=result.get("source", "forex-service"),
@@ -69,9 +57,6 @@ async def get_forex_history(
     limit: int = Query(default=20, ge=1, le=100, description="Cantidad de registros"),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Consulta el historial de tasas de cambio almacenado en la base de datos.
-    """
     try:
         query = (
             select(ForexRate)

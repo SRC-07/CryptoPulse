@@ -35,7 +35,6 @@ export default function SystemStatusModal({ isOpen, onClose }) {
         setChecks(updated);
       }
     } catch (e) {
-      // Fallback
     }
     setLastCheck(new Date().toLocaleTimeString('es-CO'));
     setIsRunning(false);
@@ -62,7 +61,6 @@ export default function SystemStatusModal({ isOpen, onClose }) {
         </div>
 
         <div className="modal-body">
-          {/* Banner de Estado Global */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -88,7 +86,6 @@ export default function SystemStatusModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Grid de Servicios */}
           <div className="status-grid" style={{ marginBottom: '20px' }}>
             {servicesList.map((srv, idx) => (
               <div key={idx} className="status-card">
@@ -106,7 +103,6 @@ export default function SystemStatusModal({ isOpen, onClose }) {
             ))}
           </div>
 
-          {/* Boton Diagnostico */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               className="btn btn--secondary"

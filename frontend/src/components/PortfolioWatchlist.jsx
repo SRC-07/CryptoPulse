@@ -7,7 +7,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
       const saved = localStorage.getItem('cryptopulse_portfolio');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    // Portafolio inicial por defecto para demostracion inmediata al cliente
     return [
       { symbol: 'BTC', amount: 0.45, buyPrice: 58000 },
       { symbol: 'ETH', amount: 3.2, buyPrice: 2350 },
@@ -19,7 +18,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
   const [selectedCoin, setSelectedCoin] = useState('BTC');
   const [amountInput, setAmountInput] = useState('1');
 
-  // Guardar en localStorage ante cambios
   useEffect(() => {
     try {
       localStorage.setItem('cryptopulse_portfolio', JSON.stringify(portfolio));
@@ -31,7 +29,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
     cryptoMap[c.symbol] = c;
   });
 
-  // Calculos de portafolio
   let totalValueUSD = 0;
   let totalCostUSD = 0;
 
@@ -82,7 +79,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
     const coinData = cryptoMap[selectedCoin];
     const buyPrice = coinData ? coinData.current_price : 0;
 
-    // Si ya existe en el portafolio, sumamos
     const existingIndex = portfolio.findIndex(p => p.symbol === selectedCoin);
     if (existingIndex >= 0) {
       const updated = [...portfolio];
@@ -168,7 +164,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
         </div>
       </div>
 
-      {/* Formulario Anadir Activo */}
       {isAdding && (
         <form className="portfolio-add-card fade-in" onSubmit={handleAddAsset}>
           <div className="portfolio-add-grid">
@@ -208,7 +203,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
         </form>
       )}
 
-      {/* Resumen del Portafolio */}
       <div className="hero__stats" style={{ marginBottom: '24px' }}>
         <div className="stat-card">
           <div className="stat-card__label">Valor Total del Portafolio</div>
@@ -242,7 +236,6 @@ export default function PortfolioWatchlist({ cryptos = [], fiatRate = 1, fiatCur
         </div>
       </div>
 
-      {/* Tabla de Tenencias */}
       {items.length === 0 ? (
         <div className="data-card">
           <div className="empty-state">

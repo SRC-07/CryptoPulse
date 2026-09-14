@@ -96,7 +96,6 @@ export default function ForexRates({
         </div>
       )}
 
-      {/* Tarjetas de pares destacados */}
       <div className="forex-highlights-grid">
         {rates.slice(0, 4).map((rate) => (
           <div key={rate.target_currency} className="forex-pair-card">
@@ -114,7 +113,6 @@ export default function ForexRates({
         ))}
       </div>
 
-      {/* Tabla detallada de tasas */}
       {loading && rates.length === 0 ? (
         <div className="data-card">
           <div className="empty-state">

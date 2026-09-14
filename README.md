@@ -2,6 +2,10 @@
 
 **Plataforma operativa de inteligencia financiera y seguimiento de activos en tiempo real** construida con arquitectura modular de microservicios.
 
+> Para consultar el detalle exhaustivo del diseño técnico, diagramas de flujo y seguridad perimetral, consulta el documento principal: **[ARQUITECTURA.md](ARQUITECTURA.md)** o **[docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)**.
+
+---
+
 ## Arquitectura del Sistema
 
 ```
@@ -30,18 +34,12 @@
 | Market Service | FastAPI (Python) | 8000 (privado) | `cryptopulse-internal` |
 | Base de Datos | PostgreSQL 16 | 5432 (privado) | `cryptopulse-internal` |
 
-### APIs Externas Consumidas
-
-- **CoinGecko API**: Precios en tiempo real, volumen y capitalizacion de criptomonedas.
-- **Frankfurter / Exchange API**: Tasas de cambio de divisas globales (USD, EUR, COP, GBP, JPY, etc.).
-
 ---
 
 ## Inicio Rapido
 
 ### Prerrequisitos
 - Docker Desktop instalado y en ejecucion
-- Git (opcional)
 
 ### Levantar la plataforma con Docker
 
@@ -109,50 +107,3 @@ Accesibles a traves del API Gateway en `http://localhost:8080`:
 - **ORM**: SQLAlchemy 2.0 (AsyncIO), asyncpg
 - **Cliente HTTP**: httpx (Asincrono con tolerancia a fallos)
 - **Validacion**: Pydantic v2
-
----
-
-## Estructura del Proyecto
-
-```
-cryptopulse/
-|-- docker-compose.yml          # Orquestacion de contenedores
-|-- .env                        # Variables de entorno
-|-- README.md
-|-- gateway/                    # API Gateway (Nginx)
-|   |-- Dockerfile
-|   `-- nginx.conf
-|-- services/
-|   `-- market-service/         # Microservicio de inteligencia de mercado
-|       |-- Dockerfile
-|       |-- requirements.txt
-|       `-- app/
-|           |-- main.py         # Punto de entrada FastAPI
-|           |-- config.py       # Configuracion del servicio
-|           |-- database.py     # Conexion asincrona PostgreSQL
-|           |-- models.py       # Modelos de datos
-|           |-- schemas.py      # Esquemas de validacion
-|           |-- routers/
-|           |   |-- health.py   # Diagnostico y monitoreo
-|           |   |-- crypto.py   # Operaciones de criptomonedas
-|           |   `-- forex.py    # Operaciones de divisas
-|           `-- services/
-|               |-- coingecko.py    # Cliente CoinGecko
-|               `-- frankfurter.py  # Cliente Forex
-|-- frontend/                   # Aplicacion Web React
-|   |-- Dockerfile
-|   |-- package.json
-|   |-- vite.config.js
-|   `-- src/
-|       |-- App.jsx
-|       |-- main.jsx
-|       |-- index.css
-|       `-- components/
-|           |-- CryptoTicker.jsx
-|           |-- CurrencyConverter.jsx
-|           |-- ForexRates.jsx
-|           |-- PortfolioWatchlist.jsx
-|           `-- SystemStatusModal.jsx
-`-- docs/
-    `-- architecture-diagram.md
-```

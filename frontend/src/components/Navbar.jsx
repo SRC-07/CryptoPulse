@@ -51,7 +51,6 @@ export default function Navbar({
       </div>
 
       <div className="navbar__actions">
-        {/* Selector de Moneda de Referencia */}
         <select
           className="navbar__currency-select"
           value={currency}
@@ -63,7 +62,6 @@ export default function Navbar({
           <option value="EUR">EUR (€)</option>
         </select>
 
-        {/* Indicador de Estado Operativo */}
         <button
           className="navbar__status-btn"
           onClick={onOpenStatus}

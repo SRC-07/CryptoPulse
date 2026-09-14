@@ -1,8 +1,3 @@
-"""
-CryptoPulse - Router de Criptomonedas.
-Endpoints para obtener precios en tiempo real y persistirlos en PostgreSQL.
-"""
-
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,18 +17,12 @@ async def get_crypto_prices(
     per_page: int = Query(default=10, ge=1, le=50, description="Cantidad de criptos a obtener"),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Obtiene los precios actuales de las principales criptomonedas.
-    Persiste los registros en la base de datos para analisis historico.
-    """
     try:
-        # 1. Obtener datos de mercado
         result = await fetch_crypto_prices(
             vs_currency=vs_currency,
             per_page=per_page,
         )
 
-        # 2. Persistir en PostgreSQL de forma segura
         try:
             for coin_data in result["data"]:
                 crypto = CryptoAsset(
@@ -50,11 +39,9 @@ async def get_crypto_prices(
                 )
                 db.add(crypto)
             await db.flush()
-        except Exception as db_err:
-            # Si la persistencia falla, no bloqueamos la respuesta al cliente
-            print(f"[WARN] Error al persistir precios en DB: {db_err}")
+        except Exception:
+            pass
 
-        # 3. Retornar respuesta
         return CryptoPricesResponse(
             status="success",
             source=result.get("source", "coingecko"),
@@ -75,9 +62,6 @@ async def get_crypto_history(
     symbol: str = Query(default=None, description="Filtrar por simbolo (ej: BTC)"),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Consulta el historial de precios almacenado en la base de datos.
-    """
     try:
         query = select(CryptoAsset).order_by(desc(CryptoAsset.created_at))
 

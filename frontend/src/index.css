@@ -1,11 +1,5 @@
-/* ============================================
-   CryptoPulse - Financial Terminal Dashboard
-   Theme: Dark Premium Finance
-   Fonts: Inter (UI) + JetBrains Mono (data)
-   ============================================ */
-
 :root {
-  /* Color Palette */
+  
   --bg-primary: #0a0e17;
   --bg-secondary: #111827;
   --bg-card: #161c2b;
@@ -14,12 +8,10 @@
   --border-default: #252e42;
   --border-accent: #384562;
 
-  /* Text Colors */
   --text-primary: #e8edf5;
   --text-secondary: #9aa5be;
   --text-muted: #5e6b84;
 
-  /* Status Colors */
   --color-positive: #10b981;
   --color-positive-bg: rgba(16, 185, 129, 0.1);
   --color-negative: #ef4444;
@@ -27,24 +19,20 @@
   --color-warning: #f59e0b;
   --color-warning-bg: rgba(245, 158, 11, 0.1);
 
-  /* Accent Colors */
   --accent-blue: #3b82f6;
   --accent-blue-bg: rgba(59, 130, 246, 0.12);
   --accent-purple: #8b5cf6;
   --accent-cyan: #06b6d4;
   --accent-cyan-bg: rgba(6, 182, 212, 0.12);
 
-  /* Effects */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
 
-  /* Spacing & Layout */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  /* Typography */
   --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
@@ -97,10 +85,6 @@ body::before {
   margin: 0 auto;
   padding: 0 32px 40px;
 }
-
-/* ============================================
-   Navbar
-   ============================================ */
 
 .navbar {
   display: flex;
@@ -235,10 +219,6 @@ body::before {
   animation: pulse-dot 2s infinite;
 }
 
-/* ============================================
-   Ticker Bar
-   ============================================ */
-
 .ticker-bar {
   background: var(--bg-secondary);
   border: 1px solid var(--border-default);
@@ -291,10 +271,6 @@ body::before {
   font-weight: 600;
   font-size: 0.8rem;
 }
-
-/* ============================================
-   Hero Stats
-   ============================================ */
 
 .hero__stats {
   display: grid;
@@ -356,10 +332,6 @@ body::before {
   color: var(--color-negative) !important;
 }
 
-/* ============================================
-   Section & Actions
-   ============================================ */
-
 .section {
   margin-bottom: 32px;
 }
@@ -389,10 +361,6 @@ body::before {
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
-
-/* ============================================
-   Buttons & Inputs
-   ============================================ */
 
 .btn {
   display: inline-flex;
@@ -499,10 +467,6 @@ body::before {
   border-color: var(--border-accent);
 }
 
-/* ============================================
-   Market Controls (Search & Filters)
-   ============================================ */
-
 .market-controls {
   display: flex;
   align-items: center;
@@ -573,10 +537,6 @@ body::before {
   color: var(--accent-blue);
   font-weight: 600;
 }
-
-/* ============================================
-   Data Cards & Tables
-   ============================================ */
 
 .data-card {
   background: var(--bg-card);
@@ -706,10 +666,6 @@ body::before {
   font-weight: 600;
   color: var(--text-primary);
 }
-
-/* ============================================
-   Converter Component
-   ============================================ */
 
 .converter-card {
   background: var(--bg-card);
@@ -867,10 +823,6 @@ body::before {
   border-color: var(--accent-blue);
 }
 
-/* ============================================
-   Forex Component
-   ============================================ */
-
 .forex-highlights-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -922,10 +874,6 @@ body::before {
   font-family: var(--font-mono);
 }
 
-/* ============================================
-   Portfolio Component
-   ============================================ */
-
 .portfolio-add-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
@@ -939,10 +887,6 @@ body::before {
   grid-template-columns: 2fr 1fr 1fr;
   gap: 16px;
 }
-
-/* ============================================
-   Modal Dialogs
-   ============================================ */
 
 .modal-overlay {
   position: fixed;
@@ -1017,7 +961,6 @@ body::before {
   border-top: 1px solid var(--border-default);
 }
 
-/* Status Cards inside Modal */
 .status-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1059,10 +1002,6 @@ body::before {
   box-shadow: 0 0 6px var(--color-negative);
 }
 
-/* ============================================
-   Empty State & Alerts
-   ============================================ */
-
 .empty-state {
   padding: 48px 24px;
   text-align: center;
@@ -1093,10 +1032,6 @@ body::before {
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: #fca5a5;
 }
-
-/* ============================================
-   Footer
-   ============================================ */
 
 .footer {
   display: flex;
@@ -1142,10 +1077,6 @@ body::before {
   color: var(--color-positive);
 }
 
-/* ============================================
-   Spinners & Animations
-   ============================================ */
-
 .loading-spinner {
   display: inline-block;
   width: 18px;
@@ -1177,10 +1108,6 @@ body::before {
 .fade-in {
   animation: fade-in 0.3s ease-out;
 }
-
-/* ============================================
-   Responsive
-   ============================================ */
 
 @media (max-width: 1024px) {
   .hero__stats {

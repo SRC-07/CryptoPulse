@@ -6,7 +6,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
   const [fromCurrency, setFromCurrency] = useState('BTC');
   const [toCurrency, setToCurrency] = useState('COP');
 
-  // Mapa de precios de criptos en USD
   const cryptoPricesInUSD = useMemo(() => {
     const map = {};
     cryptos.forEach(c => {
@@ -15,10 +14,8 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
     return map;
   }, [cryptos]);
 
-  // Mapa de tasas de fiat respecto a USD
   const fiatRatesFromUSD = useMemo(() => {
     const rates = { USD: 1, ...forexRates };
-    // Asegurar valores referenciales comunes si faltasen
     if (!rates.COP) rates.COP = 4120.0;
     if (!rates.EUR) rates.EUR = 0.92;
     if (!rates.GBP) rates.GBP = 0.79;
@@ -28,7 +25,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
     return rates;
   }, [forexRates]);
 
-  // Lista de opciones disponibles
   const cryptoOptions = cryptos.map(c => ({
     code: c.symbol,
     name: `${c.name} (${c.symbol})`,
@@ -45,12 +41,10 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
     { code: 'JPY', name: 'Yen Japones (JPY)', type: 'fiat' },
   ];
 
-  // Calculo de conversion
   const conversionResult = useMemo(() => {
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) return null;
 
-    // 1. Obtener valor de 1 unidad de "from" en USD
     let fromValueInUSD = 1;
     if (cryptoPricesInUSD[fromCurrency]) {
       fromValueInUSD = cryptoPricesInUSD[fromCurrency];
@@ -58,7 +52,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
       fromValueInUSD = 1 / fiatRatesFromUSD[fromCurrency];
     }
 
-    // 2. Convertir ese valor a "to"
     let unitRate = 1;
     if (cryptoPricesInUSD[toCurrency]) {
       unitRate = fromValueInUSD / cryptoPricesInUSD[toCurrency];
@@ -109,10 +102,8 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
         </div>
       </div>
 
-      {/* Tarjeta del Conversor */}
       <div className="converter-card">
         <div className="converter-grid">
-          {/* Lado Origen */}
           <div className="converter-group">
             <label className="converter-label">Monto a Convertir</label>
             <input
@@ -143,7 +134,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
             </select>
           </div>
 
-          {/* Boton Swap */}
           <div className="converter-swap-wrapper">
             <button
               className="converter-swap-btn"
@@ -155,7 +145,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
             </button>
           </div>
 
-          {/* Lado Destino */}
           <div className="converter-group">
             <label className="converter-label">Resultado Estimado</label>
             <div className="converter-output">
@@ -185,7 +174,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
           </div>
         </div>
 
-        {/* Tasa de Cambio Unitaria */}
         {conversionResult && (
           <div className="converter-rate-badge">
             <span>Tasa de referencia:</span>
@@ -195,7 +183,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
           </div>
         )}
 
-        {/* Atajos rapidos */}
         <div className="converter-shortcuts">
           <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Conversiones Frecuentes:</span>
           <button className="shortcut-chip" onClick={() => handleQuickConvert('BTC', 'COP', '1')}>

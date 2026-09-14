@@ -12,17 +12,15 @@ import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 const API_BASE = '/api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('markets'); // 'markets', 'converter', 'forex', 'portfolio'
+  const [activeTab, setActiveTab] = useState('markets');
   const [currency, setCurrency] = useState('USD');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
-  // Estados de datos de mercado
   const [cryptos, setCryptos] = useState([]);
   const [cryptoLoading, setCryptoLoading] = useState(false);
   const [cryptoError, setCryptoError] = useState(null);
   const [cryptoLastUpdated, setCryptoLastUpdated] = useState(null);
 
-  // Estados de datos de divisas
   const [forexRates, setForexRates] = useState([]);
   const [forexMap, setForexMap] = useState({});
   const [forexBase, setForexBase] = useState('USD');
@@ -30,7 +28,6 @@ export default function App() {
   const [forexError, setForexError] = useState(null);
   const [forexLastUpdated, setForexLastUpdated] = useState(null);
 
-  // Cargar criptomonedas
   const fetchCryptos = useCallback(async () => {
     setCryptoLoading(true);
     setCryptoError(null);
@@ -47,7 +44,6 @@ export default function App() {
     setCryptoLoading(false);
   }, []);
 
-  // Cargar divisas
   const fetchForex = useCallback(async (base = forexBase) => {
     setForexLoading(true);
     setForexError(null);
@@ -65,7 +61,6 @@ export default function App() {
     setForexLoading(false);
   }, [forexBase]);
 
-  // Carga inicial
   useEffect(() => {
     fetchCryptos();
     fetchForex('USD');
@@ -76,7 +71,6 @@ export default function App() {
     fetchForex(newBase);
   };
 
-  // Metricas globales de mercado
   const marketMetrics = React.useMemo(() => {
     if (!cryptos || cryptos.length === 0) return null;
     const topCoin = cryptos[0];
@@ -84,7 +78,6 @@ export default function App() {
     const totalVolume = cryptos.reduce((sum, c) => sum + (c.total_volume || 0), 0);
     const avgChange = cryptos.reduce((sum, c) => sum + (c.price_change_percentage_24h || 0), 0) / cryptos.length;
 
-    // Top gainer
     const sortedByChange = [...cryptos].sort((a, b) =>
       (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)
     );
@@ -109,7 +102,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* Navegacion Superior */}
       <Navbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -118,16 +110,13 @@ export default function App() {
         onOpenStatus={() => setStatusModalOpen(true)}
       />
 
-      {/* Cinta de Cotizaciones en Vivo */}
       <TickerBar
         cryptos={cryptos}
         onSelectCoin={() => setActiveTab('markets')}
       />
 
-      {/* Vista de Mercados */}
       {activeTab === 'markets' && (
         <>
-          {/* Tarjetas de Resumen Global */}
           {marketMetrics && (
             <div className="hero__stats" style={{ marginTop: '20px', marginBottom: '24px' }}>
               <div className="stat-card">
@@ -176,7 +165,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Tabla de Criptomonedas */}
           <CryptoMarket
             cryptos={cryptos}
             loading={cryptoLoading}
@@ -187,7 +175,6 @@ export default function App() {
         </>
       )}
 
-      {/* Vista del Conversor */}
       {activeTab === 'converter' && (
         <CurrencyConverter
           cryptos={cryptos}
@@ -196,7 +183,6 @@ export default function App() {
         />
       )}
 
-      {/* Vista de Forex */}
       {activeTab === 'forex' && (
         <ForexRates
           rates={forexRates}
@@ -209,7 +195,6 @@ export default function App() {
         />
       )}
 
-      {/* Vista de Portafolio */}
       {activeTab === 'portfolio' && (
         <PortfolioWatchlist
           cryptos={cryptos}
@@ -218,7 +203,6 @@ export default function App() {
         />
       )}
 
-      {/* Vista de Calculadora ROI */}
       {activeTab === 'roi' && (
         <RoiCalculator
           cryptos={cryptos}
@@ -227,13 +211,11 @@ export default function App() {
         />
       )}
 
-      {/* Modal de Estado de Infraestructura */}
       <SystemStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
       />
 
-      {/* Pie de Pagina */}
       <footer className="footer">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>

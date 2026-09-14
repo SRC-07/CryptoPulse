@@ -4,16 +4,14 @@ import Sparkline from './Sparkline';
 
 export default function CryptoMarket({ cryptos = [], loading = false, error = null, lastUpdated = null, onRefresh }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all'); // 'all', 'gainers', 'losers', 'top5'
-  const [sortBy, setSortBy] = useState('market_cap'); // 'market_cap', 'price', 'change'
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('market_cap');
   const [sortOrder, setSortOrder] = useState('desc');
   const [selectedCoin, setSelectedCoin] = useState(null);
 
-  // Filtrado y ordenamiento de criptomonedas
   const filteredCryptos = useMemo(() => {
     let list = [...cryptos];
 
-    // Busqueda
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase().trim();
       list = list.filter(c =>
@@ -21,7 +19,6 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
       );
     }
 
-    // Filtros rapidos
     if (filterType === 'gainers') {
       list = list.filter(c => (c.price_change_percentage_24h || 0) > 0);
     } else if (filterType === 'losers') {
@@ -30,7 +27,6 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
       list = list.slice(0, 5);
     }
 
-    // Ordenamiento
     list.sort((a, b) => {
       let valA = 0;
       let valB = 0;
@@ -107,7 +103,6 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
         </div>
       )}
 
-      {/* Barra de Filtros y Busqueda */}
       <div className="market-controls">
         <div className="market-search">
           <SearchIcon size={18} className="market-search__icon" />
@@ -148,7 +143,6 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
         </div>
       </div>
 
-      {/* Tabla de Mercado */}
       {loading && cryptos.length === 0 ? (
         <div className="data-card">
           <div className="empty-state">
@@ -275,7 +269,6 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
         </div>
       )}
 
-      {/* Modal de Detalle de Activo */}
       {selectedCoin && (
         <div className="modal-overlay fade-in" onClick={() => setSelectedCoin(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>

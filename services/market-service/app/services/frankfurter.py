@@ -1,14 +1,8 @@
-"""
-CryptoPulse - Cliente HTTP para datos de divisas (Forex).
-Obtiene tasas de cambio de divisas en tiempo real con alta resiliencia y soporte multi-fuente.
-"""
-
 import httpx
 from app.config import get_settings
 
 settings = get_settings()
 
-# Cache en memoria para mitigar caidas temporales
 _forex_cache: dict = {}
 
 
@@ -16,10 +10,6 @@ async def fetch_forex_rates(
     base: str = "USD",
     targets: str = "COP,EUR,GBP,JPY,BRL,MXN",
 ) -> dict:
-    """
-    Obtiene las tasas de cambio actuales para la moneda base y objetivos solicitados.
-    Implementa estrategia resiliente con Frankfurter API y fallback secundario.
-    """
     base_upper = base.upper().strip()
     target_list = [t.strip().upper() for t in targets.split(",") if t.strip()]
     headers = {"User-Agent": settings.HTTP_USER_AGENT}
@@ -28,7 +18,6 @@ async def fetch_forex_rates(
     source_used = "frankfurter"
     date_str = ""
 
-    # Intento 1: Frankfurter API
     try:
         url = f"{settings.FRANKFURTER_API_URL}/latest"
         params = {
@@ -44,7 +33,6 @@ async def fetch_forex_rates(
     except Exception:
         pass
 
-    # Si faltan monedas (ej. COP en Frankfurter) o si Frankfurter fallo por completo (ej. base=COP):
     missing_targets = [t for t in target_list if t not in rates and t != base_upper]
     if missing_targets or not rates:
         try:
@@ -62,14 +50,12 @@ async def fetch_forex_rates(
         except Exception:
             pass
 
-    # Si ambas fallaron, intentar usar cache en memoria
     cache_key = f"{base_upper}:{targets}"
     if not rates and cache_key in _forex_cache:
         cached_result = _forex_cache[cache_key]
         cached_result["source"] = "cache"
         return cached_result
 
-    # Si aun no hay datos, construir respuesta con tasas de respaldo para evitar error 502 al cliente
     if not rates:
         mock_reference = {
             "USD": {"EUR": 0.92, "COP": 4120.0, "GBP": 0.79, "JPY": 154.2, "BRL": 5.65, "MXN": 19.8},
@@ -81,7 +67,6 @@ async def fetch_forex_rates(
         rates = {t: ref.get(t, 1.0) for t in target_list}
         source_used = "reference-backup"
 
-    # Normalizar formato de salida
     normalized = []
     for currency, rate in rates.items():
         normalized.append({
@@ -99,15 +84,11 @@ async def fetch_forex_rates(
         "data": normalized,
     }
 
-    # Guardar en cache
     _forex_cache[cache_key] = result
     return result
 
 
 async def ping_frankfurter() -> dict:
-    """
-    Verifica la conectividad con el proveedor de divisas con tolerancia a redirecciones y contingencia.
-    """
     headers = {"User-Agent": settings.HTTP_USER_AGENT}
 
     async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT, headers=headers, follow_redirects=True) as client:
@@ -123,7 +104,6 @@ async def ping_frankfurter() -> dict:
         except Exception:
             pass
 
-        # Fallback a open-er-api si Frankfurter redirige o tiene problemas temporales
         fb_url = f"{settings.FALLBACK_FOREX_URL}/USD"
         fb_resp = await client.get(fb_url)
         fb_resp.raise_for_status()

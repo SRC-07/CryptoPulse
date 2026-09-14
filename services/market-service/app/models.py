@@ -1,14 +1,8 @@
-"""
-CryptoPulse - Modelos SQLAlchemy para PostgreSQL.
-Define la estructura de las tablas de la base de datos.
-"""
-
 from sqlalchemy import Column, Integer, String, Float, DateTime, func
 from app.database import Base
 
 
 class CryptoAsset(Base):
-    """Registro de criptomonedas monitoreadas con sus precios."""
     __tablename__ = "crypto_assets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -29,7 +23,6 @@ class CryptoAsset(Base):
 
 
 class ForexRate(Base):
-    """Registro de tasas de cambio de divisas."""
     __tablename__ = "forex_rates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -44,12 +37,11 @@ class ForexRate(Base):
 
 
 class HealthLog(Base):
-    """Registro de health checks realizados a los servicios."""
     __tablename__ = "health_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     service_name = Column(String(100), nullable=False)
-    status = Column(String(20), nullable=False)  # "healthy" | "unhealthy"
+    status = Column(String(20), nullable=False)
     response_time_ms = Column(Float, nullable=True)
     error_message = Column(String(500), nullable=True)
     checked_at = Column(DateTime(timezone=True), server_default=func.now())

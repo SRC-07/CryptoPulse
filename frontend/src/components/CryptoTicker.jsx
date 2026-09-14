@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 
 const API_BASE = '/api';
 
-/**
- * CryptoTicker - Real-time cryptocurrency prices.
- * Fetches data automatically on mount and provides manual refresh.
- */
 export default function CryptoTicker({ onDataLoaded }) {
   const [cryptos, setCryptos] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -3,11 +3,6 @@ import ConnectionStatus from './ConnectionStatus';
 
 const API_BASE = '/api';
 
-/**
- * HealthDashboard - System status panel.
- * Shows connectivity status of all architecture components.
- * Displayed as a collapsible section for administrative purposes.
- */
 export default function HealthDashboard() {
   const [checks, setChecks] = useState({
     gateway: { status: 'idle' },
@@ -32,7 +27,6 @@ export default function HealthDashboard() {
       return updated;
     });
 
-    // Check Gateway
     const gatewayStart = performance.now();
     try {
       const res = await fetch('/gateway/health');
@@ -59,7 +53,6 @@ export default function HealthDashboard() {
       }));
     }
 
-    // Full health check via Gateway -> FastAPI
     try {
       const res = await fetch(`${API_BASE}/health/full`);
       const data = await res.json();

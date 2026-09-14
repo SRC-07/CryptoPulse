@@ -1,20 +1,12 @@
-"""
-CryptoPulse - Cliente HTTP para la API de CoinGecko.
-Obtiene precios en tiempo real de criptomonedas con cache en memoria y alta tolerancia a fallos.
-"""
-
 import httpx
 import time
 from app.config import get_settings
 
 settings = get_settings()
 
-# Cache en memoria para mitigar limites de tasa (Rate Limit 429) de CoinGecko
 _crypto_cache: dict = {}
 _cache_ttl_seconds = 30
 
-
-# Datos de referencia de respaldo en caso de agotamiento estricto de cuota de API externa
 FALLBACK_COINS = [
     {
         "coin_id": "bitcoin",
@@ -134,15 +126,9 @@ async def fetch_crypto_prices(
     per_page: int = 10,
     page: int = 1,
 ) -> dict:
-    """
-    Obtiene los precios actuales de las top criptomonedas desde CoinGecko.
-    Si CoinGecko responde con limitacion de tasa (429) o error de conexion,
-    retorna datos cacheados o datos de referencia para que la aplicacion nunca falle.
-    """
     cache_key = f"{vs_currency.lower()}:{per_page}:{page}"
     now = time.time()
 
-    # Verificar si tenemos cache reciente valido
     if cache_key in _crypto_cache:
         cached_entry = _crypto_cache[cache_key]
         if now - cached_entry["timestamp"] < _cache_ttl_seconds:
@@ -197,13 +183,11 @@ async def fetch_crypto_prices(
     except Exception:
         pass
 
-    # Si la peticion fallo (ej. rate limit 429 o timeout), recurrir a cache previo si existe
     if cache_key in _crypto_cache:
         stale = _crypto_cache[cache_key]["payload"]
         stale["source"] = "coingecko-cached"
         return stale
 
-    # Si no hay cache previo disponible, retornar dataset de contingencia
     fallback_data = FALLBACK_COINS[:per_page]
     result = {
         "status": "success",
@@ -217,9 +201,6 @@ async def fetch_crypto_prices(
 
 
 async def ping_coingecko() -> dict:
-    """
-    Verifica la conectividad con la API de CoinGecko.
-    """
     url = f"{settings.COINGECKO_API_URL}/ping"
     headers = {"User-Agent": settings.HTTP_USER_AGENT}
 
@@ -238,7 +219,6 @@ async def ping_coingecko() -> dict:
                     "gecko_says": "Rate limited (using cache)",
                 }
     except Exception as e:
-        # Si hay cache activo, consideramos el servicio degradado pero operacional
         if _crypto_cache:
             return {"status": "healthy", "gecko_says": "Operating via cache"}
         raise e

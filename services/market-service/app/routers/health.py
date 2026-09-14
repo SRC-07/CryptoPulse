@@ -1,8 +1,3 @@
-"""
-CryptoPulse - Router de Monitoreo y Health Checks.
-Verifica la disponibilidad y latencia de los componentes del sistema.
-"""
-
 import time
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
@@ -19,10 +14,6 @@ router = APIRouter(prefix="/api/health", tags=["Health Checks"])
 
 @router.get("", response_model=ServiceHealthResponse)
 async def health_check():
-    """
-    Health check basico del Market Service.
-    Retorna si el servicio esta activo.
-    """
     return ServiceHealthResponse(
         service="market-service",
         status="healthy",
@@ -32,9 +23,6 @@ async def health_check():
 
 @router.get("/database", response_model=ServiceHealthResponse)
 async def health_check_database(db: AsyncSession = Depends(get_db)):
-    """
-    Verifica la conexion con PostgreSQL ejecutando un SELECT 1.
-    """
     start = time.time()
     try:
         result = await db.execute(text("SELECT 1"))
@@ -59,9 +47,6 @@ async def health_check_database(db: AsyncSession = Depends(get_db)):
 
 @router.get("/coingecko", response_model=ServiceHealthResponse)
 async def health_check_coingecko():
-    """
-    Verifica la conexion con el proveedor de criptomonedas.
-    """
     start = time.time()
     try:
         result = await ping_coingecko()
@@ -85,9 +70,6 @@ async def health_check_coingecko():
 
 @router.get("/forex", response_model=ServiceHealthResponse)
 async def health_check_forex():
-    """
-    Verifica la conexion con el proveedor de divisas.
-    """
     start = time.time()
     try:
         result = await ping_frankfurter()
@@ -111,19 +93,14 @@ async def health_check_forex():
 
 @router.get("/full", response_model=FullHealthResponse)
 async def health_check_full(db: AsyncSession = Depends(get_db)):
-    """
-    Ejecuta el diagnostico completo de infraestructura y retorna un reporte consolidado.
-    """
     checks = []
 
-    # 1. Market Service
     checks.append(ServiceHealthResponse(
         service="market-service",
         status="healthy",
         details={"version": "1.0.0", "framework": "FastAPI"},
     ))
 
-    # 2. PostgreSQL
     start = time.time()
     try:
         result = await db.execute(text("SELECT 1"))
@@ -143,7 +120,6 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             error=str(e),
         ))
 
-    # 3. CoinGecko API
     start = time.time()
     try:
         await ping_coingecko()
@@ -162,7 +138,6 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             error=str(e),
         ))
 
-    # 4. Forex API
     start = time.time()
     try:
         await ping_frankfurter()
@@ -181,7 +156,6 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             error=str(e),
         ))
 
-    # Calcular estado global
     healthy_count = sum(1 for c in checks if c.status == "healthy")
     total_count = len(checks)
 

@@ -5,7 +5,7 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
   const [selectedCoin, setSelectedCoin] = useState('BTC');
   const [annualRate, setAnnualRate] = useState('12');
   const [years, setYears] = useState('1');
-  const [compoundFrequency, setCompoundFrequency] = useState('12'); // 12 = mensual, 1 = anual
+  const [compoundFrequency, setCompoundFrequency] = useState('12');
 
   const calculation = useMemo(() => {
     const P = parseFloat(initialAmount);
@@ -15,7 +15,6 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
 
     if (isNaN(P) || P <= 0 || isNaN(r) || isNaN(t) || isNaN(n)) return null;
 
-    // Formula de interes compuesto: A = P * (1 + r/n)^(n*t)
     const futureValueUSD = P * Math.pow(1 + r / n, n * t);
     const totalProfitUSD = futureValueUSD - P;
     const roiPercent = (totalProfitUSD / P) * 100;
@@ -49,7 +48,6 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
 
       <div className="converter-card" style={{ maxWidth: '960px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
-          {/* Formulario de Entrada */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label className="converter-label">Capital Inicial (USD)</label>
@@ -127,7 +125,6 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
             </div>
           </div>
 
-          {/* Tarjeta de Resultados Proyectados */}
           <div style={{
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-default)',

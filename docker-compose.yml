@@ -1,9 +1,6 @@
 version: "3.9"
 
 services:
-  # ============================================
-  # FRONTEND - React Dashboard (Puerto Público)
-  # ============================================
   frontend:
     build:
       context: ./frontend
@@ -17,9 +14,6 @@ services:
       - gateway
     restart: unless-stopped
 
-  # ============================================
-  # API GATEWAY - Nginx Reverse Proxy (Punto Único de Entrada)
-  # ============================================
   gateway:
     build:
       context: ./gateway
@@ -39,15 +33,11 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # ============================================
-  # MARKET SERVICE - FastAPI Backend (Solo Red Privada)
-  # ============================================
   market-service:
     build:
       context: ./services/market-service
       dockerfile: Dockerfile
     container_name: cryptopulse-market-service
-    # NO exponemos puertos al host - solo accesible vía red interna
     env_file:
       - .env
     networks:
@@ -65,13 +55,9 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # ============================================
-  # POSTGRESQL - Base de Datos (Solo Red Privada)
-  # ============================================
   postgres:
     image: postgres:16-alpine
     container_name: cryptopulse-postgres
-    # NO exponemos puertos al host - solo accesible vía red interna
     env_file:
       - .env
     volumes:
@@ -88,22 +74,12 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-# ============================================
-# REDES - Separación Pública / Privada
-# ============================================
 networks:
-  # Red pública: accesible desde el host (Frontend + Gateway)
   cryptopulse-public:
     driver: bridge
-
-  # Red privada: red interna para servicios de backend y base de datos
-  # Sin puertos publicados al host; permite conectividad de salida hacia APIs externas
   cryptopulse-internal:
     driver: bridge
 
-# ============================================
-# VOLÚMENES - Persistencia de Datos
-# ============================================
 volumes:
   postgres_data:
     driver: local

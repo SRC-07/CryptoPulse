@@ -1,8 +1,5 @@
 import React from 'react';
 
-/**
- * ConnectionStatus - Individual service status card.
- */
 export default function ConnectionStatus({ service, status, responseTime, error, type }) {
   const statusClass = status || 'idle';
 
