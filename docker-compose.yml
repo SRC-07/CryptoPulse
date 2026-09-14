@@ -1,0 +1,109 @@
+version: "3.9"
+
+services:
+  # ============================================
+  # FRONTEND - React Dashboard (Puerto Público)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cryptopulse-frontend
+    ports:
+      - "3000:80"
+    networks:
+      - cryptopulse-public
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  # ============================================
+  # API GATEWAY - Nginx Reverse Proxy (Punto Único de Entrada)
+  # ============================================
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: cryptopulse-gateway
+    ports:
+      - "8080:80"
+    networks:
+      cryptopulse-public:
+        aliases:
+          - gateway
+      cryptopulse-internal:
+        aliases:
+          - gateway
+    depends_on:
+      market-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================
+  # MARKET SERVICE - FastAPI Backend (Solo Red Privada)
+  # ============================================
+  market-service:
+    build:
+      context: ./services/market-service
+      dockerfile: Dockerfile
+    container_name: cryptopulse-market-service
+    # NO exponemos puertos al host - solo accesible vía red interna
+    env_file:
+      - .env
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - market-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ============================================
+  # POSTGRESQL - Base de Datos (Solo Red Privada)
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: cryptopulse-postgres
+    # NO exponemos puertos al host - solo accesible vía red interna
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cryptopulse -d cryptopulse_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+# ============================================
+# REDES - Separación Pública / Privada
+# ============================================
+networks:
+  # Red pública: accesible desde el host (Frontend + Gateway)
+  cryptopulse-public:
+    driver: bridge
+
+  # Red privada: red interna para servicios de backend y base de datos
+  # Sin puertos publicados al host; permite conectividad de salida hacia APIs externas
+  cryptopulse-internal:
+    driver: bridge
+
+# ============================================
+# VOLÚMENES - Persistencia de Datos
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
