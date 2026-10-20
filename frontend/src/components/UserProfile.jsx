@@ -169,7 +169,7 @@ export default function UserProfile({
                 {user?.username}
               </h2>
               <span className="badge-tag badge-tag--positive">
-                ✓ Verificado
+                Verificado
               </span>
             </div>
             <div style={{ fontSize: '13px', color: 'var(--color-fog)', marginTop: '4px' }}>
@@ -247,7 +247,7 @@ export default function UserProfile({
                 className="btn-ghost"
                 style={{ padding: '4px 8px', fontSize: '11px', flexShrink: 0 }}
               >
-                {copied ? '✓ Copiado' : 'Copiar'}
+                {copied ? 'Copiado' : 'Copiar'}
               </button>
             </div>
           </div>

@@ -251,10 +251,9 @@ export default function PortfolioWatchlist({
           }}
         >
           <div style={{ maxWidth: '780px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="badge-tag badge-tag--positive">Simulador en Vivo</span>
+            <div style={{ marginBottom: '8px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>
-                Billetera Privada con $10,000 USD de Saldo Inicial
+                Billetera Privada
               </h3>
             </div>
             <p style={{ color: 'var(--color-fog)', fontSize: '13px', lineHeight: 1.6 }}>
@@ -295,7 +294,7 @@ export default function PortfolioWatchlist({
               : 'DEMO-PREVIEW-WALLET'}
           </div>
           <div className="wallet-banner__sub">
-            {isAuthenticated ? '🔒 Billetera Privada Protegida' : 'Modo invitado • Inicia sesión para guardar'}
+            {isAuthenticated ? 'Billetera Privada Protegida' : 'Modo invitado • Inicia sesión para guardar'}
           </div>
         </div>
 
@@ -506,7 +505,7 @@ export default function PortfolioWatchlist({
                 Terminal de Simulación de Órdenes
               </span>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
-                Ejecuta compras y ventas a precios en vivo con validación ACID y actualización inmediata de saldos.
+                Ejecuta compras y ventas a precios en tiempo real con actualización inmediata de saldos.
               </div>
             </div>
 
@@ -679,7 +678,7 @@ export default function PortfolioWatchlist({
               }}
             >
               {orderSubmitting
-                ? 'Procesando Transacción con Bloqueo ACID...'
+                ? 'Procesando Transacción...'
                 : isAuthenticated
                 ? (orderSide === 'BUY' ? `Confirmar Compra de ${parsedQty} ${selectedCoin}` : `Confirmar Venta de ${parsedQty} ${selectedCoin}`)
                 : 'Iniciar Sesión para Confirmar Orden'}

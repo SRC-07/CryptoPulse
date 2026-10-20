@@ -65,14 +65,6 @@ export default function Navbar({
         >
           Calculadora ROI
         </button>
-        {user && (
-          <button
-            className={`navbar__link ${activeTab === 'profile' ? 'navbar__link--active' : ''}`}
-            onClick={() => onTabChange('profile')}
-          >
-            Perfil
-          </button>
-        )}
       </nav>
 
       {/* Actions & Profile */}

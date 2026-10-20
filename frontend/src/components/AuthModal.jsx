@@ -217,27 +217,6 @@ export default function AuthModal({ isOpen, onClose }) {
               />
             </div>
 
-            {isRegister && (
-              <div
-                style={{
-                  background: 'var(--color-pulse-green-bg)',
-                  border: '1px solid var(--color-pulse-green-border)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '10px 12px',
-                  fontSize: '12px',
-                  color: 'var(--color-pulse-green)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <CheckCircleIcon size={14} style={{ flexShrink: 0 }} />
-                <span>
-                  Recibirás una <strong>billetera privada</strong> con <strong>$10,000 USD de capital virtual</strong> para tus operaciones.
-                </span>
-              </div>
-            )}
-
             {error && (
               <div
                 style={{
