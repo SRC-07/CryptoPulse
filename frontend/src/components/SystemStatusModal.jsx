@@ -3,11 +3,11 @@ import { CloseIcon, RefreshIcon, CheckCircleIcon, AlertCircleIcon } from './Icon
 
 export default function SystemStatusModal({ isOpen, onClose }) {
   const [checks, setChecks] = useState({
-    gateway: { status: 'healthy', responseTime: 12, name: 'API Gateway (Nginx Proxy L7)' },
-    backend: { status: 'healthy', responseTime: 24, name: 'Market Core Clúster (FastAPI)' },
-    database: { status: 'healthy', responseTime: 8, name: 'PostgreSQL 16 & MongoDB 7' },
-    coingecko: { status: 'healthy', responseTime: 110, name: 'CoinGecko Feed de Mercado' },
-    forex: { status: 'healthy', responseTime: 95, name: 'Forex Global Exchange Feed' },
+    gateway: { status: 'healthy', responseTime: 12, name: 'Servicio de Pasarela & Enrutamiento' },
+    backend: { status: 'healthy', responseTime: 24, name: 'Motor de Cotizaciones & Órdenes' },
+    database: { status: 'healthy', responseTime: 8, name: 'Base de Datos & Transacciones' },
+    coingecko: { status: 'healthy', responseTime: 110, name: 'Feed de Mercados Cripto Global' },
+    forex: { status: 'healthy', responseTime: 95, name: 'Feed de Tipos de Cambio Forex' },
   });
   const [isRunning, setIsRunning] = useState(false);
   const [lastCheck, setLastCheck] = useState(new Date().toLocaleTimeString('es-CO'));
@@ -23,13 +23,13 @@ export default function SystemStatusModal({ isOpen, onClose }) {
         const updated = { ...checks };
         (data.checks || []).forEach(c => {
           if (c.service === 'market-service') {
-            updated.backend = { status: c.status, responseTime: c.response_time_ms || 20, name: 'Market Core Clúster (FastAPI)' };
+            updated.backend = { status: c.status, responseTime: c.response_time_ms || 20, name: 'Motor de Cotizaciones & Órdenes' };
           } else if (c.service === 'postgresql') {
-            updated.database = { status: c.status, responseTime: c.response_time_ms || 8, name: 'PostgreSQL 16 & MongoDB 7' };
+            updated.database = { status: c.status, responseTime: c.response_time_ms || 8, name: 'Base de Datos & Transacciones' };
           } else if (c.service === 'coingecko-api') {
-            updated.coingecko = { status: c.status, responseTime: c.response_time_ms || 120, name: 'CoinGecko Feed de Mercado' };
+            updated.coingecko = { status: c.status, responseTime: c.response_time_ms || 120, name: 'Feed de Mercados Cripto Global' };
           } else if (c.service === 'forex-api' || c.service === 'frankfurter-api') {
-            updated.forex = { status: c.status, responseTime: c.response_time_ms || 90, name: 'Forex Global Exchange Feed' };
+            updated.forex = { status: c.status, responseTime: c.response_time_ms || 90, name: 'Feed de Tipos de Cambio Forex' };
           }
         });
         setChecks(updated);
@@ -53,7 +53,7 @@ export default function SystemStatusModal({ isOpen, onClose }) {
               Estado Operativo de la Plataforma
             </h3>
             <span style={{ fontSize: '13px', color: 'var(--color-fog)', marginTop: '2px', display: 'block' }}>
-              Monitoreo perimetral L7, latencia de servicios y persistencia distribuida.
+              Monitoreo en tiempo real de disponibilidad y latencia de infraestructura.
             </span>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar ventana">
@@ -83,7 +83,7 @@ export default function SystemStatusModal({ isOpen, onClose }) {
                 {allHealthy ? 'Todos los Sistemas Operativos al 100%' : 'Servicios con Degradación Detectada'}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
-                Última comprobación: <span className="text-mono">{lastCheck}</span> &bull; Resiliencia Circuit Breaker en Redis activa
+                Última comprobación: <span className="text-mono">{lastCheck}</span> &bull; Alta disponibilidad activa
               </div>
             </div>
           </div>

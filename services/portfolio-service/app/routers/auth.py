@@ -7,7 +7,8 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models import User, Wallet
 from app.schemas import (
-    UserRegisterRequest, UserLoginRequest, TokenResponse, UserProfileResponse
+    UserRegisterRequest, UserLoginRequest, TokenResponse, UserProfileResponse,
+    UpdateProfileRequest, ChangePasswordRequest, ResetFundsResponse
 )
 from app.services.auth import (
     get_password_hash, verify_password, create_access_token, get_current_user,
@@ -145,3 +146,88 @@ async def get_me(current_user: User = Depends(get_current_user), db: AsyncSessio
         wallet_address=wallet.wallet_address if wallet else None,
         created_at=current_user.created_at,
     )
+
+
+@router.put("/profile", response_model=UserProfileResponse)
+async def update_profile(
+    request: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Actualiza la información básica del perfil del usuario (nombre de usuario, correo electrónico).
+    """
+    if request.username:
+        new_username = request.username.strip()
+        # Verificar que no esté en uso por otro usuario
+        q_user = select(User).where(User.username == new_username, User.id != current_user.id)
+        res = await db.execute(q_user)
+        if res.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+        current_user.username = new_username
+
+    if request.email:
+        new_email = request.email.lower().strip()
+        q_email = select(User).where(User.email == new_email, User.id != current_user.id)
+        res = await db.execute(q_email)
+        if res.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
+        current_user.email = new_email
+
+    await db.flush()
+
+    q_wallet = select(Wallet).where(Wallet.user_id == current_user.id)
+    res_w = await db.execute(q_wallet)
+    wallet = res_w.scalar_one_or_none()
+
+    return UserProfileResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        wallet_address=wallet.wallet_address if wallet else None,
+        created_at=current_user.created_at,
+    )
+
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Cambia la contraseña del usuario tras verificar la contraseña actual.
+    """
+    if not verify_password(request.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta.")
+
+    current_user.password_hash = get_password_hash(request.new_password)
+    await db.flush()
+    return {"status": "success", "message": "Contraseña actualizada exitosamente."}
+
+
+@router.post("/reset-funds", response_model=ResetFundsResponse)
+async def reset_simulated_funds(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Restablece el saldo de la billetera virtual del usuario a $10,000 USD.
+    """
+    q_wallet = select(Wallet).where(Wallet.user_id == current_user.id).with_for_update()
+    res_w = await db.execute(q_wallet)
+    wallet = res_w.scalar_one_or_none()
+
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Billetera no encontrada.")
+
+    wallet.fiat_balance = settings.INITIAL_SIMULATED_BALANCE
+    await db.flush()
+
+    return ResetFundsResponse(
+        status="success",
+        message="Fondos virtuales restablecidos con éxito a $10,000.00 USD.",
+        wallet_address=wallet.wallet_address,
+        fiat_balance=wallet.fiat_balance,
+    )
+

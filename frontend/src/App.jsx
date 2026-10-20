@@ -7,7 +7,7 @@ import CurrencyConverter from './components/CurrencyConverter';
 import ForexRates from './components/ForexRates';
 import PortfolioWatchlist from './components/PortfolioWatchlist';
 import RoiCalculator from './components/RoiCalculator';
-import SystemStatusModal from './components/SystemStatusModal';
+import UserProfile from './components/UserProfile';
 import AuthModal from './components/AuthModal';
 import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 
@@ -16,7 +16,6 @@ const API_BASE = '/api';
 function MainLayout() {
   const [activeTab, setActiveTab] = useState('markets');
   const [currency, setCurrency] = useState('USD');
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
 
@@ -34,11 +33,12 @@ function MainLayout() {
   const [forexError, setForexError] = useState(null);
   const [forexLastUpdated, setForexLastUpdated] = useState(null);
 
+  // Consultar catálogo amplio de criptomonedas (Top 50)
   const fetchCryptos = useCallback(async () => {
     setCryptoLoading(true);
     setCryptoError(null);
     try {
-      const res = await fetch(`${API_BASE}/crypto/prices?vs_currency=usd&per_page=15`);
+      const res = await fetch(`${API_BASE}/crypto/prices?vs_currency=usd&per_page=50`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       const list = data.data || [];
@@ -77,6 +77,13 @@ function MainLayout() {
     fetchForex(newBase);
   };
 
+  // Tasa de cambio respecto a la moneda seleccionada (USD, COP, EUR)
+  const currentFiatRate = useMemo(() => {
+    if (currency === 'COP') return forexMap.COP || 4120;
+    if (currency === 'EUR') return forexMap.EUR || 0.92;
+    return 1;
+  }, [currency, forexMap]);
+
   // Métricas del Mercado Calculadas
   const marketMetrics = useMemo(() => {
     if (!cryptos || cryptos.length === 0) return null;
@@ -99,12 +106,28 @@ function MainLayout() {
     };
   }, [cryptos]);
 
-  const formatLarge = (num) => {
-    if (!num) return '--';
-    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
-    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-    return `$${num.toLocaleString()}`;
+  const formatMetricPrice = (usdPrice) => {
+    if (!usdPrice && usdPrice !== 0) return '--';
+    const converted = usdPrice * currentFiatRate;
+    if (currency === 'COP') {
+      return `$${converted.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP`;
+    }
+    if (currency === 'EUR') {
+      return `€${converted.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
+    }
+    return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+  };
+
+  const formatLarge = (numUSD) => {
+    if (!numUSD) return '--';
+    const converted = numUSD * currentFiatRate;
+    const symbol = currency === 'EUR' ? '€' : '$';
+    const suffix = currency === 'COP' ? ' COP' : '';
+
+    if (converted >= 1e12) return `${symbol}${(converted / 1e12).toFixed(2)}T${suffix}`;
+    if (converted >= 1e9) return `${symbol}${(converted / 1e9).toFixed(2)}B${suffix}`;
+    if (converted >= 1e6) return `${symbol}${(converted / 1e6).toFixed(2)}M${suffix}`;
+    return `${symbol}${converted.toLocaleString()}${suffix}`;
   };
 
   return (
@@ -115,122 +138,121 @@ function MainLayout() {
         onTabChange={setActiveTab}
         currency={currency}
         onCurrencyChange={setCurrency}
-        onOpenStatus={() => setStatusModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
       />
 
-      {/* Cinta Ticker en Tiempo Real */}
+      {/* Cinta Ticker en Tiempo Real con Marquee Continuo y Conversión */}
       <TickerBar
         cryptos={cryptos}
+        fiatCurrency={currency}
+        fiatRate={currentFiatRate}
         onSelectCoin={() => setActiveTab('markets')}
       />
-
-      {/* Hero Section Estilo Linear */}
-      <section className="hero-linear">
-        <div
-          className="hero__announcement"
-          onClick={() => setActiveTab('portfolio')}
-        >
-          <span className="hero__announcement-tag">Entrega 2</span>
-          <span>Billeteras Privadas 1:1 con $10,000 USD de saldo simulado en PostgreSQL 16 &rarr;</span>
-        </div>
-
-        <h1 className="hero__title">
-          La plataforma de inteligencia financiera y trading simulado
-        </h1>
-
-        <p className="hero__subtitle">
-          Cotizaciones consolidadas en tiempo real, persistencia políglota de alta velocidad con MongoDB y PostgreSQL, resiliencia con Circuit Breaker en Redis y balanceo perimetral L7.
-        </p>
-
-        <div className="hero__cta-group">
-          <button
-            className="btn-lime"
-            onClick={() => setActiveTab('portfolio')}
-          >
-            Operar en Mi Cartera
-          </button>
-          <button
-            className="btn-ghost"
-            onClick={() => setStatusModalOpen(true)}
-          >
-            Ver Diagnóstico del Clúster
-          </button>
-        </div>
-
-        {/* Tarjetas de Métricas Resumen */}
-        {marketMetrics && (
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <span className="metric-card__label">Activo Líder</span>
-              <div className="metric-card__value">
-                {marketMetrics.topCoin.name}
-              </div>
-              <div className="metric-card__sub text-mono text-positive">
-                ${marketMetrics.topCoin.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-
-            <div className="metric-card">
-              <span className="metric-card__label">Cap. Global Monitoreada</span>
-              <div className="metric-card__value text-mono">
-                {formatLarge(marketMetrics.totalMarketCap)}
-              </div>
-              <div className="metric-card__sub">
-                Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
-              </div>
-            </div>
-
-            <div className="metric-card">
-              <span className="metric-card__label">Mayor Rendimiento (24h)</span>
-              <div className="metric-card__value" style={{ color: 'var(--color-signal-teal)' }}>
-                {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
-              </div>
-              {marketMetrics.topGainer && (
-                <div className="metric-card__sub text-mono text-positive">
-                  <TrendingUpIcon size={13} />
-                  <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
-                </div>
-              )}
-            </div>
-
-            <div className="metric-card">
-              <span className="metric-card__label">Sentimiento del Mercado</span>
-              <div className="metric-card__value">
-                {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
-              </div>
-              <div className={`metric-card__sub text-mono ${marketMetrics.avgChange >= 0 ? 'text-positive' : 'text-negative'}`}>
-                {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={13} /> : <TrendingDownIcon size={13} />}
-                <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
 
       {/* Vistas Principales */}
       <main>
         {activeTab === 'markets' && (
-          <CryptoMarket
-            cryptos={cryptos}
-            loading={cryptoLoading}
-            error={cryptoError}
-            lastUpdated={cryptoLastUpdated}
-            onRefresh={fetchCryptos}
-            onOpenSimulate={(sym) => {
-              if (sym) setSelectedTradingCoin(sym);
-              setActiveTab('portfolio');
-            }}
-          />
+          <>
+            {/* Hero Section Estilo Linear (Exclusivo de la Pestaña Mercados) */}
+            <section className="hero-linear">
+              <h1 className="hero__title">
+                La plataforma de inteligencia financiera y trading simulado
+              </h1>
+
+              <p className="hero__subtitle">
+                Plataforma institucional de inteligencia de mercados, cotizaciones en tiempo real y ejecución simulada de órdenes sin riesgo financiero.
+              </p>
+
+              <div className="hero__cta-group">
+                <button
+                  className="btn-lime"
+                  onClick={() => setActiveTab('portfolio')}
+                >
+                  Operar en Mi Cartera &rarr;
+                </button>
+              </div>
+
+              {/* Tarjetas de Métricas Resumen Dinámicas */}
+              {marketMetrics && (
+                <div className="metrics-grid">
+                  <div className="metric-card">
+                    <span className="metric-card__label">Activo Líder</span>
+                    <div className="metric-card__value">
+                      {marketMetrics.topCoin.name}
+                    </div>
+                    <div className="metric-card__sub text-mono text-positive">
+                      {formatMetricPrice(marketMetrics.topCoin.current_price)}
+                    </div>
+                  </div>
+
+                  <div className="metric-card">
+                    <span className="metric-card__label">Cap. Global Monitoreada</span>
+                    <div className="metric-card__value text-mono">
+                      {formatLarge(marketMetrics.totalMarketCap)}
+                    </div>
+                    <div className="metric-card__sub">
+                      Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
+                    </div>
+                  </div>
+
+                  <div className="metric-card">
+                    <span className="metric-card__label">Mayor Rendimiento (24h)</span>
+                    <div className="metric-card__value" style={{ color: 'var(--color-signal-teal)' }}>
+                      {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
+                    </div>
+                    {marketMetrics.topGainer && (
+                      <div className="metric-card__sub text-mono text-positive">
+                        <TrendingUpIcon size={13} />
+                        <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="metric-card">
+                    <span className="metric-card__label">Sentimiento del Mercado</span>
+                    <div className="metric-card__value">
+                      {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
+                    </div>
+                    <div className={`metric-card__sub text-mono ${marketMetrics.avgChange >= 0 ? 'text-positive' : 'text-negative'}`}>
+                      {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={13} /> : <TrendingDownIcon size={13} />}
+                      <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <CryptoMarket
+              cryptos={cryptos}
+              loading={cryptoLoading}
+              error={cryptoError}
+              lastUpdated={cryptoLastUpdated}
+              fiatCurrency={currency}
+              fiatRate={currentFiatRate}
+              onRefresh={fetchCryptos}
+              onOpenSimulate={(sym) => {
+                if (sym) setSelectedTradingCoin(sym);
+                setActiveTab('portfolio');
+              }}
+            />
+          </>
         )}
 
         {activeTab === 'portfolio' && (
           <PortfolioWatchlist
             cryptos={cryptos}
             fiatCurrency={currency}
-            fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
+            fiatRate={currentFiatRate}
             onOpenAuth={() => setAuthModalOpen(true)}
             initialCoin={selectedTradingCoin}
+          />
+        )}
+
+        {activeTab === 'profile' && (
+          <UserProfile
+            fiatCurrency={currency}
+            fiatRate={currentFiatRate}
+            onNavigateTab={setActiveTab}
           />
         )}
 
@@ -258,52 +280,16 @@ function MainLayout() {
           <RoiCalculator
             cryptos={cryptos}
             fiatCurrency={currency}
-            fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
+            fiatRate={currentFiatRate}
           />
         )}
       </main>
 
-      {/* Modales Globales */}
-      <SystemStatusModal
-        isOpen={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-      />
-
+      {/* Modal de Autenticación */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
       />
-
-      {/* Footer Estilo Linear */}
-      <footer className="footer-linear">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontWeight: 510, color: 'var(--color-paper)' }}>
-            CryptoPulse &bull; Terminal de Inteligencia Financiera
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
-            Persistencia políglota (PostgreSQL 16, MongoDB 7, Redis 7). Billeteras 1:1 aisladas y clúster L7 con least_conn.
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            onClick={() => setStatusModalOpen(true)}
-            className="navbar__status-pill"
-            style={{ fontSize: '11px', padding: '3px 9px' }}
-          >
-            <span className="navbar__status-dot"></span>
-            <span>Clúster 100% Operativo</span>
-          </button>
-          <a
-            href="/api/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: '12px' }}
-          >
-            OpenAPI Docs &rarr;
-          </a>
-        </div>
-      </footer>
     </div>
   );
 }

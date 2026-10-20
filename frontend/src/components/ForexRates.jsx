@@ -53,7 +53,7 @@ export default function ForexRates({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
-            Tasas de Cambio Globales (Forex)
+            Tasas de Cambio Globales
           </h2>
           <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
             Cotizaciones oficiales de divisas internacionales y tipos de cambio cruzados en tiempo real.

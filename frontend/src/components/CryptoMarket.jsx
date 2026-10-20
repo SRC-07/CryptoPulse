@@ -7,6 +7,8 @@ export default function CryptoMarket({
   loading = false,
   error = null,
   lastUpdated = null,
+  fiatCurrency = 'USD',
+  fiatRate = 1,
   onRefresh,
   onOpenSimulate,
 }) {
@@ -63,18 +65,43 @@ export default function CryptoMarket({
     }
   };
 
-  const formatPrice = (price) => {
-    if (!price && price !== 0) return '--';
-    if (price >= 1) return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    return `$${price.toFixed(6)}`;
+  const formatPrice = (priceUSD) => {
+    if (!priceUSD && priceUSD !== 0) return '--';
+    const rate = fiatRate || 1;
+    const converted = priceUSD * rate;
+
+    if (fiatCurrency === 'COP') {
+      if (converted >= 1000) {
+        return `$${converted.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP`;
+      }
+      return `$${converted.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} COP`;
+    }
+
+    if (fiatCurrency === 'EUR') {
+      if (converted >= 1) {
+        return `€${converted.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      return `€${converted.toFixed(6)}`;
+    }
+
+    // Default USD
+    if (converted >= 1) {
+      return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `$${converted.toFixed(6)}`;
   };
 
-  const formatLarge = (num) => {
-    if (!num) return '--';
-    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
-    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-    return `$${num.toLocaleString()}`;
+  const formatLarge = (numUSD) => {
+    if (!numUSD) return '--';
+    const rate = fiatRate || 1;
+    const converted = numUSD * rate;
+    const symbol = fiatCurrency === 'EUR' ? '€' : '$';
+    const suffix = fiatCurrency === 'COP' ? ' COP' : '';
+
+    if (converted >= 1e12) return `${symbol}${(converted / 1e12).toFixed(2)}T${suffix}`;
+    if (converted >= 1e9) return `${symbol}${(converted / 1e9).toFixed(2)}B${suffix}`;
+    if (converted >= 1e6) return `${symbol}${(converted / 1e6).toFixed(2)}M${suffix}`;
+    return `${symbol}${converted.toLocaleString()}${suffix}`;
   };
 
   return (

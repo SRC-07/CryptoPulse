@@ -20,12 +20,17 @@ export default function Navbar({
         style={{ cursor: 'pointer' }}
       >
         <div className="navbar__logo-glyph">
-          <span>CP</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M3 13h4.5l2.5-6.5 4 13 3-6.5h4"
+              stroke="#ffffff"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span className="navbar__name">CryptoPulse</span>
-          <span className="navbar__tagline">Terminal v2.0</span>
-        </div>
+        <span className="navbar__name">CryptoPulse</span>
       </div>
 
       {/* Primary Navigation Tabs */}
@@ -52,7 +57,7 @@ export default function Navbar({
           className={`navbar__link ${activeTab === 'forex' ? 'navbar__link--active' : ''}`}
           onClick={() => onTabChange('forex')}
         >
-          Tasas Forex
+          Tasas
         </button>
         <button
           className={`navbar__link ${activeTab === 'roi' ? 'navbar__link--active' : ''}`}
@@ -60,6 +65,14 @@ export default function Navbar({
         >
           Calculadora ROI
         </button>
+        {user && (
+          <button
+            className={`navbar__link ${activeTab === 'profile' ? 'navbar__link--active' : ''}`}
+            onClick={() => onTabChange('profile')}
+          >
+            Perfil
+          </button>
+        )}
       </nav>
 
       {/* Actions & Profile */}
@@ -69,49 +82,27 @@ export default function Navbar({
           className="navbar__currency-select"
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value)}
-          title="Moneda base de visualización"
+          title="Moneda de visualización"
         >
           <option value="USD">USD ($)</option>
           <option value="COP">COP ($)</option>
           <option value="EUR">EUR (€)</option>
         </select>
 
-        {/* Indicador de Estado del Clúster */}
-        <button
-          className="navbar__status-pill"
-          onClick={onOpenStatus}
-          title="Ver diagnóstico de clúster y balanceo least_conn"
-        >
-          <span className="navbar__status-dot"></span>
-          <span>Operativo</span>
-        </button>
-
         {/* Estado de Autenticación */}
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
-              className="navbar__user-badge"
-              onClick={() => onTabChange('portfolio')}
-              title={`Billetera: ${user.wallet_address || 'Asignada'}`}
+              className={`navbar__user-badge ${activeTab === 'profile' ? 'navbar__user-badge--active' : ''}`}
+              onClick={() => onTabChange('profile')}
+              title={`Ver perfil de ${user.username}`}
+              style={{ cursor: 'pointer' }}
             >
               <div className="navbar__user-avatar">
                 {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
               </div>
-              <span style={{ fontSize: '12px', fontWeight: 510, color: 'var(--color-paper)' }}>
+              <span style={{ fontSize: '13px', fontWeight: 510, color: 'var(--color-paper)' }}>
                 {user.username}
-              </span>
-              <span
-                className="text-mono"
-                style={{
-                  fontSize: '11px',
-                  color: 'var(--color-pulse-green)',
-                  background: 'var(--color-pulse-green-bg)',
-                  padding: '1px 6px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--color-pulse-green-border)'
-                }}
-              >
-                {user.wallet_address ? `${user.wallet_address.slice(0, 8)}...` : 'Wallet 1:1'}
               </span>
             </div>
 

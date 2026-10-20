@@ -29,16 +29,38 @@ async def get_realtime_crypto_price(symbol: str) -> Optional[float]:
 
     # Fallback predeterminado para permitir simulaciones fluidas en modo offline
     fallback_prices = {
-        "BTC": 67500.0,
-        "ETH": 2650.0,
-        "SOL": 165.0,
-        "BNB": 590.0,
-        "ADA": 0.36,
-        "XRP": 0.54,
-        "DOT": 4.25,
-        "DOGE": 0.14,
+        "BTC": 82577.0,
+        "ETH": 2437.69,
+        "USDT": 1.0,
+        "SOL": 106.13,
+        "BNB": 738.36,
+        "XRP": 1.33,
+        "USDC": 1.0,
+        "ADA": 0.68,
+        "AVAX": 28.45,
+        "DOGE": 0.245,
+        "DOT": 6.85,
+        "LINK": 16.4,
+        "SUI": 2.88,
+        "NEAR": 5.72,
+        "UNI": 9.35,
+        "LTC": 88.5,
+        "BCH": 420.0,
+        "SHIB": 0.0000215,
+        "PEPE": 0.0000108,
+        "XLM": 0.32,
+        "TRX": 0.198,
+        "APT": 11.8,
+        "KAS": 0.165,
+        "XMR": 162.0,
+        "RENDER": 7.45,
+        "AAVE": 185.0,
+        "INJ": 24.1,
+        "ATOM": 5.4,
+        "ARB": 0.78,
+        "OP": 1.85,
     }
-    return fallback_prices.get(symbol_clean, 100.0)
+    return fallback_prices.get(symbol_clean, 50.0)
 
 
 async def emit_notification_event(event_type: str, payload: Dict[str, Any]):

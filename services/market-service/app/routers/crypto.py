@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/crypto", tags=["Criptomonedas"])
 @router.get("/prices", response_model=CryptoPricesResponse)
 async def get_crypto_prices(
     vs_currency: str = Query(default="usd", description="Moneda de referencia (usd, eur, cop)"),
-    per_page: int = Query(default=10, ge=1, le=50, description="Cantidad de criptos a obtener"),
+    per_page: int = Query(default=30, ge=1, le=100, description="Cantidad de criptos a obtener"),
     db: AsyncSession = Depends(get_db),
 ):
     cache_key = f"crypto:prices:{vs_currency.lower()}:{per_page}"

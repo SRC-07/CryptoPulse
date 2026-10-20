@@ -93,3 +93,22 @@ class SimulateOrderResult(BaseModel):
     message: str
     order: SimulationOrderResponse
     updated_wallet: WalletResponse
+
+
+# Schemas de Gestión de Perfil y Seguridad
+class UpdateProfileRequest(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[EmailStr] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=6)
+
+
+class ResetFundsResponse(BaseModel):
+    status: str
+    message: str
+    wallet_address: str
+    fiat_balance: float
+

@@ -19,12 +19,29 @@ export default function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
+      const emailClean = email.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailClean || !emailRegex.test(emailClean)) {
+        throw new Error('Por favor ingresa un correo electrónico válido (ej: usuario@dominio.com).');
+      }
+
       if (isRegister) {
-        if (!username.trim()) throw new Error('Ingresa un nombre de usuario');
-        if (password.length < 6) throw new Error('La contraseña debe tener mínimo 6 caracteres');
-        await register(username.trim(), email.trim(), password);
+        const usernameClean = username.trim();
+        if (!usernameClean || usernameClean.length < 3) {
+          throw new Error('El nombre de usuario debe contener al menos 3 caracteres.');
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(usernameClean)) {
+          throw new Error('El nombre de usuario sólo puede contener letras, números, guiones y guiones bajos.');
+        }
+        if (password.length < 6) {
+          throw new Error('La contraseña debe tener un mínimo de 6 caracteres para proteger tu cuenta.');
+        }
+        await register(usernameClean, emailClean, password);
       } else {
-        await login(email.trim(), password);
+        if (!password) {
+          throw new Error('Por favor ingresa tu contraseña.');
+        }
+        await login(emailClean, password);
       }
       onClose();
     } catch (err) {
@@ -83,7 +100,7 @@ export default function AuthModal({ isOpen, onClose }) {
                     color: 'var(--color-acid-lime)',
                   }}
                 >
-                  {user?.username?.slice(0, 2).toUpperCase() || 'CP'}
+                  {user?.username?.slice(0, 2).toUpperCase() || 'US'}
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>{user?.username}</div>
@@ -93,10 +110,10 @@ export default function AuthModal({ isOpen, onClose }) {
 
               <div style={{ marginTop: '6px', paddingTop: '10px', borderTop: '1px solid var(--color-graphite)' }}>
                 <span style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                  Billetera Personal 1:1 (PostgreSQL 16):
+                  Dirección de Billetera Privada:
                 </span>
                 <div className="text-mono text-positive" style={{ fontSize: '13px', marginTop: '4px', wordBreak: 'break-all' }}>
-                  {user?.wallet_address || 'Asignada y Aislada'}
+                  {user?.wallet_address || 'Asignada y Protegida'}
                 </div>
               </div>
             </div>
@@ -216,7 +233,7 @@ export default function AuthModal({ isOpen, onClose }) {
               >
                 <CheckCircleIcon size={14} style={{ flexShrink: 0 }} />
                 <span>
-                  Recibirás <strong>tu propia billetera 1:1</strong> en PostgreSQL con <strong>$10,000 USD de saldo virtual</strong>.
+                  Recibirás una <strong>billetera privada</strong> con <strong>$10,000 USD de capital virtual</strong> para tus operaciones.
                 </span>
               </div>
             )}

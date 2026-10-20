@@ -85,7 +85,10 @@ export default function PortfolioWatchlist({
     if (fiatCurrency === 'COP') {
       return `$${converted.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP`;
     }
-    return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${fiatCurrency}`;
+    if (fiatCurrency === 'EUR') {
+      return `€${converted.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
+    }
+    return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
   };
 
   // Precio del activo seleccionado para simulación
@@ -192,7 +195,7 @@ export default function PortfolioWatchlist({
           </h2>
           <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
             {isAuthenticated
-              ? `Billetera exclusiva asignada a ${user?.username} con aislamiento estricto y persistencia ACID en PostgreSQL 16.`
+              ? `Billetera privada de trading de ${user?.username} con ejecución y balance en tiempo real.`
               : 'Simula operaciones de compra/venta y gestiona activos cripto en tiempo real con fondos virtuales.'}
           </p>
         </div>
@@ -203,7 +206,7 @@ export default function PortfolioWatchlist({
               className="btn-ghost"
               onClick={() => { refreshWallet(); fetchOrderHistory(); }}
               disabled={walletLoading}
-              title="Sincronizar billetera con PostgreSQL"
+              title="Actualizar balance de billetera"
             >
               <RefreshIcon size={14} className={walletLoading ? 'loading-spin' : ''} />
               <span>Sincronizar</span>
@@ -249,14 +252,13 @@ export default function PortfolioWatchlist({
         >
           <div style={{ maxWidth: '780px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="badge-tag badge-tag--positive">Entrega 2 &bull; PostgreSQL 16</span>
+              <span className="badge-tag badge-tag--positive">Simulador en Vivo</span>
               <h3 style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>
-                Billeteras Personales Aisladas (1:1 por Usuario)
+                Billetera Privada con $10,000 USD de Saldo Inicial
               </h3>
             </div>
             <p style={{ color: 'var(--color-fog)', fontSize: '13px', lineHeight: 1.6 }}>
-              Cada usuario registrado posee <strong>su propia billetera independiente</strong> con <strong>$10,000 USD de saldo virtual</strong>.
-              Las billeteras están completamente aisladas mediante llaves UUID criptográficas y bloqueo pesimista contra condiciones de carrera.
+              Cada cuenta dispone de <strong>su propia billetera privada</strong> con <strong>$10,000 USD de capital virtual</strong> para practicar estrategias de trading, comprar y vender criptomonedas a cotizaciones reales de mercado sin arriesgar dinero real.
             </p>
           </div>
 
@@ -273,7 +275,7 @@ export default function PortfolioWatchlist({
       <div className="wallet-banner">
         <div>
           <div className="wallet-banner__title">
-            {isAuthenticated ? 'Dirección Aislada (1:1)' : 'Billetera de Demostración'}
+            {isAuthenticated ? 'Dirección de Billetera' : 'Billetera de Demostración'}
           </div>
           <div
             className="text-mono"
@@ -290,10 +292,10 @@ export default function PortfolioWatchlist({
           >
             {isAuthenticated
               ? (wallet?.wallet_address || user?.wallet_address || 'Asignada')
-              : 'CP-DEMO-GUEST-WALLET'}
+              : 'DEMO-PREVIEW-WALLET'}
           </div>
           <div className="wallet-banner__sub">
-            {isAuthenticated ? '🔒 Exclusiva en PostgreSQL 16' : 'Modo invitado &bull; Inicia sesión para persistir'}
+            {isAuthenticated ? '🔒 Billetera Privada Protegida' : 'Modo invitado • Inicia sesión para guardar'}
           </div>
         </div>
 
@@ -303,7 +305,7 @@ export default function PortfolioWatchlist({
             {formatFiat(fiatBalance)}
           </div>
           <div className="wallet-banner__sub">
-            USD Virtual para Simulación
+            {fiatCurrency} Virtual para Simulación
           </div>
         </div>
 
@@ -380,8 +382,8 @@ export default function PortfolioWatchlist({
               </span>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 {isAuthenticated
-                  ? 'Registros persistidos en PostgreSQL con cálculo de P&L en tiempo real.'
-                  : 'Modo demostración: Abre el simulador para realizar compras de prueba.'}
+                  ? 'Posiciones activas con cálculo de rentabilidad P&L en tiempo real.'
+                  : 'Modo demostración: Abre el simulador para realizar tus primeras operaciones.'}
               </div>
             </div>
           </div>
@@ -692,10 +694,10 @@ export default function PortfolioWatchlist({
           <div className="table-card__toolbar">
             <div>
               <span style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)' }}>
-                Libro Contable de Órdenes (PostgreSQL 16)
+                Historial Completo de Órdenes
               </span>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
-                Registro inmutable de simulaciones asociadas a tu billetera personal.
+                Registro cronológico de todas las operaciones ejecutadas en tu billetera.
               </div>
             </div>
 

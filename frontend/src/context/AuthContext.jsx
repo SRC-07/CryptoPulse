@@ -116,6 +116,68 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
+  const updateProfile = async (newUsername, newEmail) => {
+    const res = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: newUsername, email: newEmail }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Error al actualizar perfil');
+    }
+
+    const updatedUser = {
+      ...user,
+      username: data.username,
+      email: data.email,
+    };
+    setUser(updatedUser);
+    localStorage.setItem('cryptopulse_user', JSON.stringify(updatedUser));
+    return updatedUser;
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    const res = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Error al cambiar contraseña');
+    }
+    return data;
+  };
+
+  const resetSimulatedFunds = async () => {
+    const res = await fetch('/api/auth/reset-funds', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Error al restablecer fondos');
+    }
+    await fetchMyWallet(token);
+    return data;
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -135,6 +197,9 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!token,
         login,
         register,
+        updateProfile,
+        changePassword,
+        resetSimulatedFunds,
         logout,
         refreshWallet: () => fetchMyWallet(token),
       }}
