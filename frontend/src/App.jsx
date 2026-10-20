@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import TickerBar from './components/TickerBar';
 import CryptoMarket from './components/CryptoMarket';
@@ -7,14 +8,16 @@ import ForexRates from './components/ForexRates';
 import PortfolioWatchlist from './components/PortfolioWatchlist';
 import RoiCalculator from './components/RoiCalculator';
 import SystemStatusModal from './components/SystemStatusModal';
+import AuthModal from './components/AuthModal';
 import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 
 const API_BASE = '/api';
 
-export default function App() {
+function MainLayout() {
   const [activeTab, setActiveTab] = useState('markets');
   const [currency, setCurrency] = useState('USD');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const [cryptos, setCryptos] = useState([]);
   const [cryptoLoading, setCryptoLoading] = useState(false);
@@ -108,6 +111,7 @@ export default function App() {
         currency={currency}
         onCurrencyChange={setCurrency}
         onOpenStatus={() => setStatusModalOpen(true)}
+        onOpenAuth={() => setAuthModalOpen(true)}
       />
 
       <TickerBar
@@ -200,6 +204,7 @@ export default function App() {
           cryptos={cryptos}
           fiatCurrency={currency}
           fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
+          onOpenAuth={() => setAuthModalOpen(true)}
         />
       )}
 
@@ -214,6 +219,11 @@ export default function App() {
       <SystemStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
       />
 
       <footer className="footer">
@@ -246,5 +256,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 }

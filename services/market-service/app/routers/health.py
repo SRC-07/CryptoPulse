@@ -8,6 +8,7 @@ from app.database import get_db
 from app.schemas import ServiceHealthResponse, FullHealthResponse
 from app.services.coingecko import ping_coingecko
 from app.services.frankfurter import ping_frankfurter
+from app.mongodb import ping_mongo
 
 router = APIRouter(prefix="/api/health", tags=["Health Checks"])
 
@@ -19,6 +20,27 @@ async def health_check():
         status="healthy",
         details={"version": "1.0.0", "framework": "FastAPI"},
     )
+
+
+@router.get("/mongodb", response_model=ServiceHealthResponse)
+async def health_check_mongodb():
+    start = time.time()
+    try:
+        res = await ping_mongo()
+        return ServiceHealthResponse(
+            service="mongodb-7",
+            status="healthy",
+            response_time_ms=res.get("response_time_ms", 1.0),
+            details={"database": res.get("database"), "connection": "active"},
+        )
+    except Exception as e:
+        elapsed_ms = round((time.time() - start) * 1000, 2)
+        return ServiceHealthResponse(
+            service="mongodb-7",
+            status="unhealthy",
+            response_time_ms=elapsed_ms,
+            error=str(e),
+        )
 
 
 @router.get("/database", response_model=ServiceHealthResponse)
@@ -95,12 +117,32 @@ async def health_check_forex():
 async def health_check_full(db: AsyncSession = Depends(get_db)):
     checks = []
 
+    # 1. Market Service
     checks.append(ServiceHealthResponse(
         service="market-service",
         status="healthy",
         details={"version": "1.0.0", "framework": "FastAPI"},
     ))
 
+    # 2. MongoDB 7 (Base documental para cambios de criptos)
+    start = time.time()
+    try:
+        res = await ping_mongo()
+        checks.append(ServiceHealthResponse(
+            service="mongodb-7",
+            status="healthy",
+            response_time_ms=res.get("response_time_ms", 1.0),
+        ))
+    except Exception as e:
+        elapsed_ms = round((time.time() - start) * 1000, 2)
+        checks.append(ServiceHealthResponse(
+            service="mongodb-7",
+            status="unhealthy",
+            response_time_ms=elapsed_ms,
+            error=str(e),
+        ))
+
+    # 3. PostgreSQL 16 (Base relacional para usuarios/wallets)
     start = time.time()
     try:
         result = await db.execute(text("SELECT 1"))
@@ -120,6 +162,7 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             error=str(e),
         ))
 
+    # 4. CoinGecko API
     start = time.time()
     try:
         await ping_coingecko()
@@ -138,6 +181,7 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             error=str(e),
         ))
 
+    # 5. Forex API
     start = time.time()
     try:
         await ping_frankfurter()
@@ -176,3 +220,4 @@ async def health_check_full(db: AsyncSession = Depends(get_db)):
             "unhealthy": total_count - healthy_count,
         },
     )
+

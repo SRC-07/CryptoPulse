@@ -1,22 +1,40 @@
-# Arquitectura del Sistema — CryptoPulse
+# Arquitectura del Sistema — CryptoPulse (Entrega 2)
 
-Este documento describe de manera exhaustiva la arquitectura de software, los componentes de infraestructura, los flujos de datos y los mecanismos de resiliencia implementados en **CryptoPulse**.
-
----
-
-## 1. Visión General del Sistema
-
-**CryptoPulse** es una plataforma distribuida de inteligencia financiera y seguimiento de activos en tiempo real. Su propósito es consolidar cotizaciones de criptomonedas y tasas de cambio internacionales (Forex), ofreciendo herramientas interactivas de análisis financiero, conversión de divisas, seguimiento de portafolios y monitoreo continuo de infraestructura.
-
-### Principios de Diseño
-* **Arquitectura de Microservicios:** Separación estricta de responsabilidades entre presentación, pasarela de enlace, lógica de negocio y persistencia.
-* **Perímetro Seguro:** Aislamiento de capas mediante redes privadas virtuales de Docker; ningún servicio de backend ni base de datos expone puertos hacia la máquina anfitriona (*host*).
-* **Persistencia Transaccional No Bloqueante:** Persistencia asíncrona en base de datos relacional (PostgreSQL) con tolerancia a fallos garantizada.
-* **Alta Disponibilidad y Resiliencia:** Estrategia multinivel de mitigación (caché en memoria con TTL, conmutación por error híbrida entre APIs y conjuntos de datos de contingencia) para asegurar operación 24/7.
+Este documento describe de manera exhaustiva la arquitectura técnica de microservicios, la topología de clúster con balanceo de carga, la persistencia políglota (*Database-per-Service*), los mecanismos de resiliencia y el aseguramiento de calidad según la norma **ISO 9126** implementados en **CryptoPulse**.
 
 ---
 
-## 2. Diagrama de Arquitectura Global
+## 1. Visión General del Sistema (Entrega 2)
+
+**CryptoPulse** ha evolucionado hacia una plataforma financiera distribuida de alta disponibilidad con balanceo de carga perimetral, gestión de identidades segura, billeteras personales estrictamente aisladas (*1 usuario = 1 wallet privada*) y tolerancia a fallos mediante el patrón *Circuit Breaker*.
+
+![Arquitectura Oficial del Sistema CryptoPulse - Entrega 2](architecture-cryptopulse-entrega2.jpg)
+
+### Principios de Diseño Arquitectónico (Entrega 2)
+
+1. **Balanceo de Carga y Clúster Multi-Instancia (Eficiencia):**
+   - El API Gateway (Nginx 1.27) actúa como un balanceador de carga de Capa 7 (*Application Load Balancer*) distribuyendo el tráfico entre múltiples réplicas de los microservicios usando el algoritmo **`least_conn`** (asigna la solicitud a la instancia con menos conexiones concurrentes activas).
+   - **Clúster Market Service:** Réplicas `market-service-1:8000` y `market-service-2:8000` para atender ráfagas de consultas de cotizaciones sin degradación.
+   - **Clúster Portfolio Service:** Réplicas `portfolio-service-1:8001` y `portfolio-service-2:8001` para sesiones de usuario concurrentes y transacciones de billetera.
+   - **Protección Perimetral DoS:** Directiva de *Rate Limiting* (`limit_req_zone`) en Nginx que previene ataques de denegación de servicio fijando una tasa máxima de 15 peticiones/segundo por IP con ráfaga (*burst*) controlada.
+
+2. **Gestión de Identidad y Aislamiento Estricto de Billeteras (Seguridad e Integridad):**
+   - **Autenticación Criptográfica:** Cifrado unidireccional de contraseñas con el estándar `bcrypt` y expedición de tokens de sesión **JWT (JSON Web Tokens)** firmados con algoritmo HS256.
+   - **Garantía Inviolable de No Compartir Wallets:** En PostgreSQL 16, cada registro de la tabla `wallets` está sujeto a una restricción única `UNIQUE(user_id)`. Cada usuario registrado dispone de **su propia billetera virtual exclusiva**, dotada de un saldo inicial simulado de **$10,000 USD**. Ningún usuario puede visualizar, consultar ni debitar fondos de otra cuenta.
+   - **Consistencia Transaccional ACID:** Toda simulación de compra o venta bloquea atómicamente la fila de la wallet (`with_for_update()`) para evitar condiciones de carrera (*race conditions*).
+
+3. **Caché Distribuido y Resiliencia Circuit Breaker (Confiabilidad y Rendimiento):**
+   - **Capa de Caché L1 en Redis 7:** Almacenamiento distribuido en memoria de cotizaciones y tasas con TTL de 30 segundos, reduciendo la latencia de respuesta a menos de 3 ms y blindando el sistema contra límites de cuota (*HTTP 429 Too Many Requests*) de las APIs externas.
+   - **Patrón Cortacircuitos (*Circuit Breaker*):** Si CoinGecko o Frankfurter presentan 3 fallos consecutivos o latencias mayores a 10s, el circuito conmuta a estado `OPEN` y abastece automáticamente las cotizaciones más recientes almacenadas en **MongoDB 7**, garantizando una experiencia ininterrumpida al usuario.
+
+4. **Patrón *Database-per-Service* Consolidado:**
+   - **Db1: MongoDB 7 (Documental - E1):** Ingesta masiva y time-series de ticks y variaciones de precio de criptomonedas.
+   - **Db2: PostgreSQL 16 (Relacional - E2):** Usuarios, billeteras aisladas, activos en posesión y libro mayor inmutable de órdenes simuladas.
+   - **Db3: Redis 7 (In-Memory - E3):** Caché distribuido L1, colas FIFO (`LPUSH`) y canales Pub/Sub para alertas de mercado en tiempo real.
+
+---
+
+## 2. Diagrama de Arquitectura del Clúster (Mermaid)
 
 ```mermaid
 graph TD
@@ -26,189 +44,129 @@ graph TD
     classDef db fill:#0B1E2E,stroke:#EAB308,stroke-width:2px,color:#FFFFFF;
     classDef external fill:#1E293B,stroke:#94A3B8,stroke-dasharray: 5 5,color:#FFFFFF;
 
-    subgraph CapaCliente["Capa de Cliente (Navegador Web)"]
+    subgraph CapaCliente["Capa de Presentación"]
         FE["Frontend Web SPA (React 18 / Vite)<br/>Puerto Público 3000"]:::client
     end
 
-    subgraph Perimetro["Perímetro Seguro de Entrada"]
-        GW["API Gateway / Reverse Proxy (Nginx 1.27)<br/>Puerto Público 8080"]:::gateway
+    subgraph Perimetro["Perímetro y Balanceo de Carga"]
+        GW["API Gateway / Load Balancer (Nginx 1.27)<br/>Balanceo: least_conn | Rate Limiter DoS<br/>Puerto Público 8080"]:::gateway
     end
 
     subgraph RedInterna["Red Privada Docker (cryptopulse-internal)"]
-        MS["Market Core Service (FastAPI / Uvicorn)<br/>Puerto Interno 8000"]:::service
-        DB[("Base de Datos PostgreSQL 16<br/>Puerto Interno 5432")]:::db
+        subgraph ClusterMarket["Clúster Market Service (E1)"]
+            M1["market-service-1 (:8000)"]:::service
+            M2["market-service-2 (:8000)"]:::service
+        end
+
+        subgraph ClusterPortfolio["Clúster Portfolio & Auth (E2)"]
+            P1["portfolio-service-1 (:8001)<br/>JWT Auth + Bcrypt"]:::service
+            P2["portfolio-service-2 (:8001)<br/>JWT Auth + Bcrypt"]:::service
+        end
+
+        subgraph WorkerService["Asincronía (E3)"]
+            NW["Notification Worker (:8002)<br/>Redis Streams / PubSub"]:::service
+        end
+
+        subgraph Almacenes["Domain Databases (Database-per-Service)"]
+            DB1[("Db1: MongoDB 7<br/>Documental - E1<br/>Histórico de Ticks Cripto")]:::db
+            DB2[("Db2: PostgreSQL 16<br/>Relacional - E2<br/>Usuarios, Wallets 1:1 y Ledger")]:::db
+            DB3[("Db3: Redis 7<br/>In-Memory - E3<br/>Caché Distribuido L1 + Colas")]:::db
+        end
     end
 
-    subgraph Externas["APIs Financieras Externas"]
+    subgraph Externas["Proveedores Financieros Externos"]
         CG["CoinGecko API v3<br/>(Precios Cripto)"]:::external
         FX["Frankfurter & Open-ER APIs<br/>(Divisas Forex)"]:::external
     end
 
-    FE -->|Peticiones HTTP / REST| GW
-    GW -->|Proxy inverso /api/| MS
-    MS -->|SQLAlchemy Async / asyncpg| DB
-    MS -->|HTTPX Async| CG
-    MS -->|HTTPX Async Fallback| FX
+    %% Enrutamiento y Balanceo de Carga
+    FE -->|HTTP 8080| GW
+    GW -->|least_conn /api/crypto/, /api/forex/| ClusterMarket
+    GW -->|least_conn /api/auth/, /api/wallet/| ClusterPortfolio
+    GW -->|/api/notifications/| NW
+
+    %% Comunicación Inter-Servicios REST
+    ClusterMarket <-->|REST Interna: Precios en vivo| ClusterPortfolio
+    ClusterPortfolio <-->|REST / Eventos: Notificaciones| NW
+    ClusterMarket <-->|Alertas de volatilidad| NW
+
+    %% Conexiones directas a Bases de Datos
+    ClusterMarket -->|Motor Async / Ingesta de ticks| DB1
+    ClusterPortfolio -->|AsyncPG / Transacciones ACID| DB2
+    NW -->|Redis Streams / PubSub| DB3
+    ClusterMarket -.->|Caché Distribuido L1| DB3
+
+    %% Conexión resiliente a APIs externas
+    ClusterMarket -->|Circuit Breaker HTTPX| CG
+    ClusterMarket -->|Circuit Breaker HTTPX| FX
 ```
 
 ---
 
-## 3. Descripción de Componentes
+## 3. Matriz de Componentes del Clúster
 
-### 3.1. Frontend Web SPA (`frontend/`)
-* **Tecnología:** React 18, Vite 5, JavaScript moderno (ES Modules) y CSS nativo con diseño *glassmorphism* y modo oscuro.
-* **Servidor en Contenedor:** Nginx 1.27 Alpine en esquema de despliegue multi-stage (Node.js 20 para compilar `dist/` y Nginx para servir estáticos).
-* **Módulos y Vistas:**
-  * **Mercados Cripto:** Tabla interactiva en vivo con búsqueda, filtros por tendencia (ganadores, perdedores, top 5), ordenamiento multidimensional, gráficos de sparkline de 7 días y modal de ficha técnica detallada.
-  * **Conversor Global:** Calculadora instantánea bidireccional entre cualquier par de criptomonedas y divisas fiat (USD, COP, EUR, GBP, MXN, BRL, JPY).
-  * **Tasas Forex:** Matriz de tipos de cambio en vivo con soporte de selección de moneda base y cálculo automático de tasas directas e inversas.
-  * **Portafolio Personal:** Administrador de posiciones de inversión con cálculo de valor de mercado en tiempo real, Ganancias y Pérdidas (P&L), persistencia en almacenamiento local (*localStorage*) y exportación de datos a formato CSV.
-  * **Calculadora ROI:** Simulador de interés compuesto con ajuste de capital inicial, tasa anual proyectada (APY), frecuencia de capitalización y horizonte temporal.
-  * **Diagnóstico de Infraestructura:** Panel modal que ejecuta comprobaciones de latencia y estado en tiempo real sobre todos los servicios del sistema.
-
-### 3.2. API Gateway (`gateway/`)
-* **Tecnología:** Nginx 1.27 Alpine configurado como proxy inverso de alto rendimiento.
-* **Responsabilidades:**
-  * **Punto Único de Entrada (*Single Point of Entry*):** Atiende en el puerto 8080 y encamina el tráfico de `/api/` hacia `market-service:8000` en la red privada interna.
-  * **Seguridad y Aislamiento:** Impide el acceso directo no autorizado a los contenedores internos desde fuera del entorno de Docker.
-  * **Gestión de CORS y Headers:** Configuración centralizada de cabeceras de control de acceso (`Access-Control-Allow-Origin`, `Methods`, `Headers`) y respuesta a solicitudes de verificación preliminar (*preflight OPTIONS*).
-  * **Sondeo de Salud Propio:** Expone el endpoint `/gateway/health` con tiempo de respuesta local sin sobrecargar el backend.
-
-### 3.3. Market Core Service (`services/market-service/`)
-* **Tecnología:** Python 3.12, FastAPI 0.115, servidor ASGI Uvicorn 0.30 y cliente HTTP asíncrono HTTPX.
-* **Estructura Modular:**
-  * `app/main.py`: Punto de arranque de la aplicación, configuración de ciclo de vida (*lifespan*) con reintentos de inicialización para PostgreSQL, middlewares y documentación automática interactiva Swagger (`/api/docs`).
-  * `app/config.py`: Gestión tipada de variables de entorno mediante Pydantic Settings con patrón singleton (`@lru_cache`).
-  * `app/database.py`: Creación del motor asíncrono `create_async_engine`, factory de sesiones `async_sessionmaker` y función generadora `get_db` para inyección de dependencias.
-  * `app/models.py`: Modelos declarativos SQLAlchemy mapeados a tablas de PostgreSQL.
-  * `app/schemas.py`: Modelos Pydantic para validación de datos de entrada y serialización de respuestas JSON.
-  * `app/routers/`: Controladores divididos por dominio (`crypto.py`, `forex.py`, `health.py`).
-  * `app/services/`: Clientes de integración externa (`coingecko.py`, `frankfurter.py`).
-
-### 3.4. Base de Datos Relacional (`postgres`)
-* **Tecnología:** PostgreSQL 16 Alpine con almacenamiento persistente montado en un volumen administrado de Docker (`postgres_data`).
-* **Tablas Principales:**
-  * `crypto_assets`: Histórico de cotizaciones de criptomonedas (identificador, símbolo, nombre, precio actual, capitalización de mercado, cambio en 24h, volumen total, URL de icono y marcas de tiempo).
-  * `forex_rates`: Histórico de tasas de cambio de divisas (moneda base, moneda objetivo, tasa de conversión y marcas de tiempo).
-  * `health_logs`: Registro de comprobaciones de disponibilidad, latencias y errores de conectividad de los componentes del sistema.
+| Contenedor / Servicio | Imagen / Tecnología | Rol en el Clúster | Puertos Internos | Políticas de Escalado / Balanceo |
+|---|---|---|---|---|
+| `cryptopulse-frontend` | React 18, Vite 5, Nginx Alpine | SPA interactiva con Auth, Billetera Privada y Mercados | 80 (mapeado a 3000 host) | 1 contenedor público |
+| `cryptopulse-gateway` | Nginx 1.27 Alpine | Balanceador de Carga Capa 7 y Proxy Inverso | 80 (mapeado a 8080 host) | Cluster `upstream` con `least_conn` y Rate Limiter |
+| `market-service-1` | Python 3.12, FastAPI | Réplica A de ingesta y provisión de cotizaciones | 8000 | Balanceada por Nginx |
+| `market-service-2` | Python 3.12, FastAPI | Réplica B de ingesta y provisión de cotizaciones | 8000 | Balanceada por Nginx |
+| `portfolio-service-1`| Python 3.12, FastAPI | Réplica A de usuarios, JWT y billeteras aisladas | 8001 | Balanceada por Nginx |
+| `portfolio-service-2`| Python 3.12, FastAPI | Réplica B de usuarios, JWT y billeteras aisladas | 8001 | Balanceada por Nginx |
+| `notification-worker`| Python 3.12, FastAPI, Redis-py | Worker de tareas en background y despacho de alertas | 8002 | Suscriptor de colas Redis |
+| `cryptopulse-mongodb` | MongoDB 7.0 Jammy | Almacén documental de cotizaciones e histórico | 27017 | Aislado en red privada (0 puertos host) |
+| `cryptopulse-postgres`| PostgreSQL 16 Alpine | Almacén relacional ACID para usuarios y wallets | 5432 | Aislado en red privada (0 puertos host) |
+| `cryptopulse-redis` | Redis 7 Alpine | Caché en memoria L1 y broker de mensajería | 6379 | Aislado en red privada (0 puertos host) |
 
 ---
 
-## 4. Flujo de Datos y Ciclo de Petición
-
-El siguiente diagrama ilustra la interacción paso a paso cuando un usuario consulta cotizaciones:
+## 4. Flujo de Datos: Simulación Concurrente con Balanceo de Carga
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Usuario as Navegador Web (React SPA)
-    participant GW as API Gateway (Nginx :8080)
-    participant MS as Market Service (FastAPI)
-    participant Cache as Caché en Memoria (TTL 30s)
-    participant APIExt as APIs Externas (CoinGecko / Forex)
-    participant DB as PostgreSQL 16 (cryptopulse-internal)
+    actor Usuario as Inversor (React SPA)
+    participant GW as Nginx Load Balancer (:8080)
+    participant PS as Portfolio Service (Réplica least_conn)
+    participant MS as Market Service (Réplica least_conn)
+    participant RD as Redis 7 (Caché L1)
+    participant PG as PostgreSQL 16 (Ledger ACID)
 
-    Usuario->>GW: GET /api/crypto/prices?vs_currency=usd
-    GW->>MS: Proxy Pass http://market_service:8000/api/crypto/prices
+    Usuario->>GW: POST /api/wallet/simulate/order (Token Bearer JWT)
+    Note over GW: Verifica Rate Limit (<= 15 req/s)<br/>Aplica algoritmo least_conn
+    GW->>PS: Proxy Pass a réplica portfolio-service-1 o 2
+
+    Note over PS: Valida JWT y extrae user_id autenticado
+    PS->>MS: GET /api/crypto/prices (Consulta precio de mercado)
     
-    MS->>Cache: Verificar si existe caché válido (< 30s)
-    alt Caché vigente disponible
-        Cache-->>MS: Retorna datos en memoria
-    else Caché expirado o inexistente
-        MS->>APIExt: Solicitud HTTP asíncrona (HTTPX con timeout de 15s)
-        alt Respuesta exitosa (HTTP 200)
-            APIExt-->>MS: Payload JSON con cotizaciones
-            MS->>Cache: Guardar en caché con timestamp
-        else Fallo externo / Rate Limit 429
-            MS->>Cache: Retornar caché anterior si existe
-            Note over MS: Si no hay caché, activa dataset de respaldo (fallback)
-        end
+    MS->>RD: GET market:prices:usd (Caché L1)
+    alt Cotización vigente en Redis (< 30s)
+        RD-->>MS: Retorna precio (< 2ms)
+    else Caché expirado
+        MS->>MS: Consulta API externa o fallback MongoDB
+        MS->>RD: SETEX market:prices:usd 30s
     end
+    MS-->>PS: Retorna precio actual: $67,845.20 USD
 
-    par Persistencia Asíncrona No Bloqueante
-        MS->>DB: INSERT INTO crypto_assets (...)
-        DB-->>MS: Confirmación de inserción (flush)
-    and Respuesta al Cliente
-        MS-->>GW: HTTP 200 con CryptoPricesResponse (JSON)
-        GW-->>Usuario: Retorno seguro con cabeceras CORS
-    end
+    Note over PS,PG: Transacción ACID con Bloqueo de Fila
+    PS->>PG: BEGIN TRANSACTION
+    PS->>PG: SELECT * FROM wallets WHERE user_id = :uid FOR UPDATE
+    PG-->>PS: Saldo disponible ($10,000 USD)
+    PS->>PG: Descontar saldo fiat y actualizar balance de cripto
+    PS->>PG: INSERT INTO simulation_orders (...)
+    PS->>PG: COMMIT
+    PG-->>PS: Transacción confirmada
+
+    PS-->>GW: HTTP 200 (Wallet actualizada + Orden ejecutada)
+    GW-->>Usuario: Renderizado inmediato en pantalla
 ```
 
 ---
 
-## 5. Topología de Redes Docker y Seguridad
+## 5. Alineación con Factores de Calidad ISO 9126
 
-El entorno está orquestado mediante `docker-compose.yml` dividiendo los contenedores en dos redes virtuales con controladores tipo *bridge*:
-
-| Red Docker | Tipo | Contenedores Miembro | Puertos Expuestos al Host | Propósito |
-|---|---|---|---|---|
-| `cryptopulse-public` | Pública / Externa | `frontend`, `gateway` | `3000` (Frontend), `8080` (Gateway) | Permitir acceso directo del usuario desde su navegador web. |
-| `cryptopulse-internal` | Privada / Aislada | `gateway`, `market-service`, `postgres` | **Ninguno (0 puertos al host)** | Contener de forma hermética la lógica transaccional y los datos. |
-
-### Reglas de Seguridad Implementadas:
-1. **Aislamiento Total de PostgreSQL:** El puerto 5432 no está expuesto en la máquina host; únicamente los contenedores dentro de `cryptopulse-internal` pueden resolver el nombre DNS `postgres` y conectarse.
-2. **Aislamiento del Backend:** El puerto 8000 de FastAPI no es accesible directamente desde el exterior; cualquier interacción pasa forzosamente por Nginx Gateway.
-3. **Conectividad de Salida:** Los contenedores en la red interna tienen acceso de egreso a Internet para consultar las APIs financieras externas a través de la interfaz NAT de Docker.
-
----
-
-## 6. Mecanismos de Resiliencia y Tolerancia a Fallos
-
-1. **Mitigación de Rate Limiting (CoinGecko):**
-   * Las APIs gratuitas aplican límites de peticiones por minuto (*HTTP 429 Too Many Requests*).
-   * Se cuenta con un caché en memoria con ventana de 30 segundos. Si la API externa responde 429 o expira el tiempo límite, se sirven los últimos datos válidos en caché marcados con `"source": "coingecko-cached"`.
-2. **Estrategia Híbrida Multi-Fuente para Divisas (Forex):**
-   * Las consultas se envían prioritariamente a Frankfurter API.
-   * Si la moneda solicitada no está soportada (como COP) o hay falla de conexión, se recurre automáticamente a Open-ER API (`https://open.er-api.com/v6/latest`).
-   * Si ambos servicios fallan, se aplica un conjunto de datos de referencia fija para evitar el error 502 al usuario.
-3. **Persistencia No Bloqueante en Base de Datos:**
-   * La operación de guardado en PostgreSQL dentro de los endpoints `/prices` y `/rates` está encapsulada en bloques `try/except`. Si la base de datos presenta lentitud o desconexión, la petición HTTP responde al cliente sin interrupción.
-4. **Ciclo de Reintentos en el Inicio (*Startup Retry Mechanism*):**
-   * Al iniciar el contenedor de FastAPI, la función `lifespan` ejecuta hasta 10 intentos con pausa de 2 segundos para esperar a que PostgreSQL complete su inicialización interna.
-
----
-
-## 7. Catálogo de Endpoints de la API
-
-Accesibles a través de la pasarela en `http://localhost:8080`:
-
-### Criptomonedas
-| Método | Ruta | Parámetros de Consulta | Descripción |
-|---|---|---|---|
-| `GET` | `/api/crypto/prices` | `vs_currency` (usd/eur/cop), `per_page` (1-50) | Cotizaciones actuales con caché y guardado en PostgreSQL |
-| `GET` | `/api/crypto/history` | `limit` (1-100), `symbol` (ej: BTC, ETH) | Consulta de precios históricos almacenados en base de datos |
-
-### Tasas de Cambio (Forex)
-| Método | Ruta | Parámetros de Consulta | Descripción |
-|---|---|---|---|
-| `GET` | `/api/forex/rates` | `base` (ej: USD, EUR, COP), `targets` (separados por coma) | Tasas de cambio en vivo con soporte híbrido de proveedores |
-| `GET` | `/api/forex/history` | `base` (ej: USD), `limit` (1-100) | Historial de tasas de cambio persistidas en base de datos |
-
-### Diagnóstico de Infraestructura y Salud
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/gateway/health` | Estado del Nginx Reverse Proxy (Gateway) |
-| `GET` | `/api/health` | Estado del Market Core Service (FastAPI) |
-| `GET` | `/api/health/database` | Comprobación de conectividad y latencia con PostgreSQL (`SELECT 1`) |
-| `GET` | `/api/health/coingecko` | Comprobación de conectividad con CoinGecko API |
-| `GET` | `/api/health/forex` | Comprobación de conectividad con proveedores de Forex |
-| `GET` | `/api/health/full` | Reporte integral consolidado de todos los componentes del sistema |
-| `GET` | `/api/docs` | Interfaz interactiva de documentación Swagger UI (OpenAPI 3.0) |
-
----
-
-## 8. Despliegue y Ejecución
-
-```bash
-# 1. Iniciar todos los servicios en segundo plano con reconstrucción de imágenes
-docker compose up --build -d
-
-# 2. Inspeccionar estado de los contenedores y healthchecks
-docker compose ps
-
-# 3. Visualizar logs consolidados en tiempo real
-docker compose logs -f
-
-# 4. Detener la plataforma preservando datos en volúmenes
-docker compose down
-```
+1. **Usabilidad:** Autenticación fluida con tokens JWT, persistencia de preferencias de usuario (moneda base, modo oscuro, favoritas) y retroalimentación instantánea de balance.
+2. **Confiabilidad:** Patrón *Circuit Breaker* que commuta hacia el histórico de MongoDB 7 ante caídas de proveedores externos; health checks consolidados con métricas de latencia.
+3. **Eficiencia:** Balanceo de cargas `least_conn` en Nginx reduciendo tiempos de espera; capa de caché distribuida en Redis 7 con respuestas en < 3 ms.
+4. **Seguridad:** Cifrado de claves con `bcrypt`, tokens JWT temporales, aislamiento estricto de billeteras (1:1 no compartidas) y *Rate Limiting* en Nginx contra ataques de denegación de servicio.
+5. **Mantenibilidad:** Arquitectura modular desacoplada, suite de pruebas automatizadas con `pytest` y pipeline de CI/CD con GitHub Actions.

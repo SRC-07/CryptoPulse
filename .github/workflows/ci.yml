@@ -1,0 +1,43 @@
+name: CryptoPulse CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-quality:
+    name: Backend Test Suite & Quality Gates (ISO 9126)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio httpx sqlalchemy[asyncio] aiosqlite bcrypt python-jose email-validator pydantic-settings motor redis greenlet asyncpg
+
+      - name: Run Pytest Test Suite
+        env:
+          JWT_SECRET_KEY: ci_cd_test_secret_key_iso9126_compliance_2026
+          INITIAL_SIMULATED_BALANCE: 10000.0
+        run: |
+          pytest tests/ -v --durations=10
+
+      - name: Verify Architecture and Gateway Configuration
+        run: |
+          test -f gateway/nginx.conf
+          grep -q "least_conn" gateway/nginx.conf
+          grep -q "upstream market_service_cluster" gateway/nginx.conf
+          grep -q "upstream portfolio_service_cluster" gateway/nginx.conf
+          test -f docker-compose.yml
+          test -f docs/architecture-cryptopulse-entrega2.jpg

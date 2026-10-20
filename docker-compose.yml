@@ -1,6 +1,9 @@
 version: "3.9"
 
 services:
+  # ==========================================
+  # Capa de Presentación
+  # ==========================================
   frontend:
     build:
       context: ./frontend
@@ -14,6 +17,9 @@ services:
       - gateway
     restart: unless-stopped
 
+  # ==========================================
+  # API Gateway & Load Balancer (Nginx)
+  # ==========================================
   gateway:
     build:
       context: ./gateway
@@ -29,23 +35,33 @@ services:
         aliases:
           - gateway
     depends_on:
-      market-service:
+      market-service-1:
+        condition: service_healthy
+      portfolio-service-1:
         condition: service_healthy
     restart: unless-stopped
 
-  market-service:
+  # ==========================================
+  # Clúster Market Service (E1) — 2 Réplicas
+  # ==========================================
+  market-service-1:
     build:
       context: ./services/market-service
       dockerfile: Dockerfile
-    container_name: cryptopulse-market-service
+    container_name: cryptopulse-market-service-1
     env_file:
       - .env
+    environment:
+      SERVICE_INSTANCE_ID: "market-1"
     networks:
       cryptopulse-internal:
         aliases:
+          - market-service-1
           - market-service
     depends_on:
-      postgres:
+      mongodb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
@@ -55,6 +71,140 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  market-service-2:
+    build:
+      context: ./services/market-service
+      dockerfile: Dockerfile
+    container_name: cryptopulse-market-service-2
+    env_file:
+      - .env
+    environment:
+      SERVICE_INSTANCE_ID: "market-2"
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - market-service-2
+          - market-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ==========================================
+  # Clúster Portfolio & Auth (E2) — 2 Réplicas
+  # ==========================================
+  portfolio-service-1:
+    build:
+      context: ./services/portfolio-service
+      dockerfile: Dockerfile
+    container_name: cryptopulse-portfolio-service-1
+    env_file:
+      - .env
+    environment:
+      SERVICE_INSTANCE_ID: "portfolio-1"
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - portfolio-service-1
+          - portfolio-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  portfolio-service-2:
+    build:
+      context: ./services/portfolio-service
+      dockerfile: Dockerfile
+    container_name: cryptopulse-portfolio-service-2
+    env_file:
+      - .env
+    environment:
+      SERVICE_INSTANCE_ID: "portfolio-2"
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - portfolio-service-2
+          - portfolio-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ==========================================
+  # Notification Worker (E3)
+  # ==========================================
+  notification-worker:
+    build:
+      context: ./services/notification-worker
+      dockerfile: Dockerfile
+    container_name: cryptopulse-notification-worker
+    env_file:
+      - .env
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - notification-worker
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ==========================================
+  # Domain Databases (Database-per-Service)
+  # ==========================================
+
+  # Db1: MongoDB 7 (Documental - E1 para Market Service)
+  mongodb:
+    image: mongo:7.0
+    container_name: cryptopulse-mongodb
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-cryptopulse}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-cryptopulse_secret_2024}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-cryptopulse_market}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - mongodb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Db2: PostgreSQL 16 (Relacional - E2 para Portfolio Service y Wallets)
   postgres:
     image: postgres:16-alpine
     container_name: cryptopulse-postgres
@@ -67,19 +217,47 @@ services:
         aliases:
           - postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cryptopulse -d cryptopulse_db"]
+      test: ["CMD-SHELL", "pg_isready -U cryptopulse -d cryptopulse_portfolio || pg_isready -U cryptopulse -d cryptopulse_db"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
     restart: unless-stopped
 
+  # Db3: Redis 7 (In-Memory - E3 para Caché L1 y Colas de Alertas)
+  redis:
+    image: redis:7-alpine
+    container_name: cryptopulse-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      cryptopulse-internal:
+        aliases:
+          - redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+# ==========================================
+# Redes Virtuales (Aislamiento Perimetral)
+# ==========================================
 networks:
   cryptopulse-public:
     driver: bridge
   cryptopulse-internal:
     driver: bridge
 
+# ==========================================
+# Volúmenes Persistentes
+# ==========================================
 volumes:
   postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
     driver: local

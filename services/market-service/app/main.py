@@ -4,12 +4,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
+from app.mongodb import init_mongo
 from app.routers import health, crypto, forex
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    retries = 10
+    # Inicialización no bloqueante de MongoDB (Db1 - Market Service)
+    try:
+        await init_mongo()
+    except Exception:
+        pass
+
+    # Inicialización de PostgreSQL
+    retries = 5
     while retries > 0:
         try:
             await init_db()
@@ -21,6 +29,7 @@ async def lifespan(app: FastAPI):
             await asyncio.sleep(2)
 
     yield
+
 
 
 app = FastAPI(

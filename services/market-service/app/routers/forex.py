@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import ForexRate
 from app.schemas import ForexRatesResponse, ForexRateResponse
 from app.services.frankfurter import fetch_forex_rates
+from app.mongodb import save_forex_ticks
 
 router = APIRouter(prefix="/api/forex", tags=["Tasas de Cambio"])
 
@@ -23,6 +24,13 @@ async def get_forex_rates(
     try:
         result = await fetch_forex_rates(base=base, targets=targets)
 
+        # 1. Persistencia primaria en MongoDB 7 (Documental - E1)
+        try:
+            await save_forex_ticks(base=base, rates_data=result.get("data", []))
+        except Exception:
+            pass
+
+        # 2. Persistencia secundaria en PostgreSQL
         try:
             for rate_data in result["data"]:
                 forex = ForexRate(
@@ -35,6 +43,7 @@ async def get_forex_rates(
             await db.flush()
         except Exception:
             pass
+
 
         return ForexRatesResponse(
             status="success",
