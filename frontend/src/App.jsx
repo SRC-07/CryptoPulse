@@ -12,10 +12,73 @@ import AuthModal from './components/AuthModal';
 import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 
 const API_BASE = '/api';
+const VALID_TABS = ['markets', 'portfolio', 'converter', 'forex', 'roi', 'profile'];
+
+const getSavedTab = () => {
+  try {
+    const hash = window.location.hash.replace('#', '').trim();
+    if (VALID_TABS.includes(hash)) {
+      return hash;
+    }
+    const saved = localStorage.getItem('cryptopulse_active_tab');
+    if (saved && VALID_TABS.includes(saved)) {
+      return saved;
+    }
+  } catch (e) {
+    // fallback
+  }
+  return 'markets';
+};
 
 function MainLayout() {
-  const [activeTab, setActiveTab] = useState('markets');
-  const [currency, setCurrency] = useState('USD');
+  const [activeTab, setActiveTabState] = useState(getSavedTab);
+  const [currency, setCurrencyState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_fiat_currency') || 'USD';
+    } catch (e) {
+      return 'USD';
+    }
+  });
+
+  const setActiveTab = useCallback((tab) => {
+    if (!VALID_TABS.includes(tab)) return;
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('cryptopulse_active_tab', tab);
+      if (window.location.hash !== `#${tab}`) {
+        window.location.hash = tab;
+      }
+    } catch (e) {
+      // fallback
+    }
+  }, []);
+
+  const setCurrency = (c) => {
+    setCurrencyState(c);
+    try {
+      localStorage.setItem('cryptopulse_fiat_currency', c);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    if (!window.location.hash || !VALID_TABS.includes(window.location.hash.replace('#', ''))) {
+      window.location.hash = activeTab;
+    }
+
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (VALID_TABS.includes(hash)) {
+        setActiveTabState(hash);
+        try {
+          localStorage.setItem('cryptopulse_active_tab', hash);
+        } catch (e) {}
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [activeTab]);
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
 

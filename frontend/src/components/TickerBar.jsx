@@ -37,9 +37,9 @@ export default function TickerBar({
 }) {
   const activeCoins = cryptos && cryptos.length > 0 ? cryptos : DEFAULT_TICKER_COINS;
 
-  // Asegurar que el grupo base tenga al menos 20 elementos para cubrir cualquier resolución de pantalla
+  // Asegurar que el grupo base tenga suficientes elementos para cubrir cualquier resolución de pantalla
   let baseGroup = [...activeCoins];
-  while (baseGroup.length < 24) {
+  while (baseGroup.length < 32) {
     baseGroup = [...baseGroup, ...activeCoins];
   }
 
@@ -90,7 +90,7 @@ export default function TickerBar({
   };
 
   return (
-    <div className="ticker-bar" title="Cinta de cotizaciones en tiempo real - Pausa al pasar el cursor">
+    <div className="ticker-bar">
       <div className="ticker-track">
         {/* Grupo 1 */}
         <div className="ticker-group">
