@@ -92,19 +92,20 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
   };
 
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
-      <div>
-        <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
+    <section style={{ maxWidth: '820px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ fontSize: '26px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
           Conversor Global de Activos
         </h2>
-        <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '6px' }}>
           Calculadora en tiempo real entre criptomonedas y divisas internacionales.
         </p>
       </div>
 
-      <div className="table-card" style={{ maxWidth: '880px', padding: '28px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '20px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="table-card" style={{ width: '100%', padding: '32px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', gap: '20px', alignItems: 'center' }}>
+          {/* Columna Izquierda: Origen */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0, width: '100%' }}>
             <div className="simulate-input-group">
               <label className="simulate-label">Monto a Convertir</label>
               <input
@@ -124,7 +125,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
                 className="simulate-input"
                 value={fromCurrency}
                 onChange={(e) => setFromCurrency(e.target.value)}
-                style={{ background: 'var(--color-obsidian)', cursor: 'pointer' }}
               >
                 <optgroup label="Criptomonedas">
                   {cryptoOptions.map(c => (
@@ -140,34 +140,55 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '16px' }}>
+          {/* Botón Central de Intercambio (Centrado perfecto) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button
               className="btn-ghost"
               onClick={handleSwap}
               title="Intercambiar monedas"
               type="button"
-              style={{ width: '40px', height: '40px', borderRadius: '50%', padding: 0 }}
+              style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--color-smoke)',
+                background: 'var(--color-obsidian)',
+                color: 'var(--color-mist)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
             >
               <SwapIcon size={18} />
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Columna Derecha: Destino */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0, width: '100%' }}>
             <div className="simulate-input-group">
               <label className="simulate-label">Resultado Estimado</label>
               <div
                 className="text-mono"
                 style={{
                   background: 'var(--color-obsidian)',
-                  border: '1px solid var(--color-graphite)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
                   fontSize: '18px',
                   fontWeight: 510,
                   color: 'var(--color-paper)',
-                  minHeight: '44px',
+                  height: '46px',
+                  minHeight: '46px',
                   display: 'flex',
                   alignItems: 'center',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  width: '100%',
                 }}
               >
                 {conversionResult ? (
@@ -184,7 +205,6 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
                 className="simulate-input"
                 value={toCurrency}
                 onChange={(e) => setToCurrency(e.target.value)}
-                style={{ background: 'var(--color-obsidian)', cursor: 'pointer' }}
               >
                 <optgroup label="Divisas Fiat">
                   {fiatOptions.map(f => (
@@ -224,7 +244,7 @@ export default function CurrencyConverter({ cryptos = [], forexRates = {}, forex
           </div>
         )}
 
-        <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '12px', color: 'var(--color-fog)' }}>Conversiones Frecuentes:</span>
           <button className="chip-pill" onClick={() => handleQuickConvert('BTC', 'COP', '1')}>
             1 BTC &rarr; COP

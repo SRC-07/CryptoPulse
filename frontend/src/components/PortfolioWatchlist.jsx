@@ -526,7 +526,7 @@ export default function PortfolioWatchlist({
 
           <form onSubmit={handleExecuteOrder} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Selector de Tipo de Operación (Compra vs Venta) con Estilo Linear */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '10px' }}>
               <button
                 type="button"
                 onClick={() => setOrderSide('BUY')}
@@ -538,6 +538,7 @@ export default function PortfolioWatchlist({
                   background: orderSide === 'BUY' ? 'var(--color-pulse-green)' : 'transparent',
                   color: orderSide === 'BUY' ? 'var(--color-void)' : 'var(--color-fog)',
                   borderColor: orderSide === 'BUY' ? 'var(--color-pulse-green)' : 'var(--color-graphite)',
+                  width: '100%',
                 }}
               >
                 Comprar Cripto (BUY)
@@ -554,20 +555,21 @@ export default function PortfolioWatchlist({
                   background: orderSide === 'SELL' ? 'var(--color-coral-red)' : 'transparent',
                   color: orderSide === 'SELL' ? 'var(--color-paper)' : 'var(--color-fog)',
                   borderColor: orderSide === 'SELL' ? 'var(--color-coral-red)' : 'var(--color-graphite)',
+                  width: '100%',
                 }}
               >
                 Vender Cripto (SELL)
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
               <div className="simulate-input-group">
                 <label className="simulate-label">Seleccionar Activo Cripto</label>
                 <select
                   className="simulate-input"
                   value={selectedCoin}
                   onChange={(e) => setSelectedCoin(e.target.value.toUpperCase())}
-                  style={{ cursor: 'pointer', background: 'var(--color-obsidian)' }}
+                  style={{ cursor: 'pointer', background: 'var(--color-obsidian)', width: '100%', minWidth: 0, height: '46px' }}
                 >
                   {cryptos.map(c => (
                     <option key={c.symbol} value={c.symbol}>
@@ -588,6 +590,7 @@ export default function PortfolioWatchlist({
                   onChange={(e) => setOrderQuantity(e.target.value)}
                   placeholder="ej: 0.25"
                   required
+                  style={{ width: '100%', minWidth: 0, height: '46px' }}
                 />
               </div>
             </div>

@@ -36,17 +36,17 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
   };
 
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
-      <div>
-        <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
+    <section style={{ maxWidth: '960px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ fontSize: '26px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
           Calculadora de Proyección y Rendimiento (ROI)
         </h2>
-        <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '6px' }}>
           Simula el crecimiento potencial de un portafolio mediante interés compuesto en el tiempo.
         </p>
       </div>
 
-      <div className="table-card" style={{ maxWidth: '960px', padding: '28px' }}>
+      <div className="table-card" style={{ width: '100%', padding: '28px', boxSizing: 'border-box' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
           {/* Parámetros de Entrada */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -96,7 +96,7 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px' }}>
               <div className="simulate-input-group">
                 <label className="simulate-label">Horizonte Temporal</label>
                 <select
@@ -169,7 +169,7 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px' }}>
                 <div
                   style={{
                     background: 'var(--color-carbon)',
