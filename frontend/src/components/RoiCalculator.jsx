@@ -36,50 +36,52 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
   };
 
   return (
-    <section className="section fade-in">
-      <div className="section__header">
-        <div>
-          <h2 className="section__title">Calculadora de Proyeccion y Rendimiento (ROI)</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Simula el crecimiento potencial de una inversion mediante interes compuesto a lo largo del tiempo.
-          </p>
-        </div>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
+      <div>
+        <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
+          Calculadora de Proyección y Rendimiento (ROI)
+        </h2>
+        <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
+          Simula el crecimiento potencial de un portafolio mediante interés compuesto en el tiempo.
+        </p>
       </div>
 
-      <div className="converter-card" style={{ maxWidth: '960px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
+      <div className="table-card" style={{ maxWidth: '960px', padding: '28px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+          {/* Parámetros de Entrada */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label className="converter-label">Capital Inicial (USD)</label>
+            <div className="simulate-input-group">
+              <label className="simulate-label">Capital Inicial de Inversión (USD)</label>
               <input
                 type="number"
                 min="10"
                 step="50"
-                className="converter-input"
+                className="simulate-input"
                 value={initialAmount}
                 onChange={(e) => setInitialAmount(e.target.value)}
               />
             </div>
 
-            <div>
-              <label className="converter-label">Activo Objetivo</label>
+            <div className="simulate-input-group">
+              <label className="simulate-label">Activo Cripto de Referencia</label>
               <select
-                className="converter-select"
+                className="simulate-input"
                 value={selectedCoin}
                 onChange={(e) => setSelectedCoin(e.target.value)}
+                style={{ background: 'var(--color-obsidian)', cursor: 'pointer' }}
               >
                 {cryptos.map(c => (
                   <option key={c.symbol} value={c.symbol}>
-                    {c.name} ({c.symbol}) - ${c.current_price?.toLocaleString()}
+                    {c.name} ({c.symbol}) &bull; ${c.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <label className="converter-label">Rendimiento Estimado Anual (APY %)</label>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent-cyan)' }}>
+            <div className="simulate-input-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="simulate-label">Rendimiento Anual Estimado (APY %)</label>
+                <span className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510, fontSize: '13px' }}>
                   {annualRate}%
                 </span>
               </div>
@@ -90,34 +92,36 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
                 step="1"
                 value={annualRate}
                 onChange={(e) => setAnnualRate(e.target.value)}
-                style={{ width: '100%', accentColor: 'var(--accent-blue)', cursor: 'pointer', marginTop: '6px' }}
+                style={{ width: '100%', accentColor: 'var(--color-acid-lime)', cursor: 'pointer', marginTop: '8px' }}
               />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label className="converter-label">Horizonte Temporal</label>
+              <div className="simulate-input-group">
+                <label className="simulate-label">Horizonte Temporal</label>
                 <select
-                  className="converter-select"
+                  className="simulate-input"
                   value={years}
                   onChange={(e) => setYears(e.target.value)}
+                  style={{ background: 'var(--color-obsidian)', cursor: 'pointer' }}
                 >
                   <option value="0.5">6 Meses</option>
-                  <option value="1">1 Ano</option>
-                  <option value="2">2 Anos</option>
-                  <option value="3">3 Anos</option>
-                  <option value="5">5 Anos</option>
+                  <option value="1">1 Año</option>
+                  <option value="2">2 Años</option>
+                  <option value="3">3 Años</option>
+                  <option value="5">5 Años</option>
                 </select>
               </div>
 
-              <div>
-                <label className="converter-label">Capitalizacion</label>
+              <div className="simulate-input-group">
+                <label className="simulate-label">Frecuencia Capitalización</label>
                 <select
-                  className="converter-select"
+                  className="simulate-input"
                   value={compoundFrequency}
                   onChange={(e) => setCompoundFrequency(e.target.value)}
+                  style={{ background: 'var(--color-obsidian)', cursor: 'pointer' }}
                 >
-                  <option value="12">Mensual (Recomendado)</option>
+                  <option value="12">Mensual</option>
                   <option value="1">Anual</option>
                   <option value="365">Diaria</option>
                 </select>
@@ -125,49 +129,83 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
             </div>
           </div>
 
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 'var(--radius-md)',
-            padding: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}>
+          {/* Tarjeta de Salida de Proyección (Precision Showcase) */}
+          <div
+            style={{
+              background: 'var(--color-obsidian)',
+              border: '1px solid var(--color-graphite)',
+              borderRadius: 'var(--radius-cards)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '20px',
+            }}
+          >
             <div>
-              <span className="data-card__badge" style={{ marginBottom: '14px', display: 'inline-block' }}>
-                Proyeccion Estimada
-              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span className="badge-tag badge-tag--positive">Proyección Compuesta</span>
+                <span className="badge-tag badge-tag--neutral">{years} {years === '1' ? 'Año' : 'Años'}</span>
+              </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div className="stat-card__label">Valor Total Estimado al Finalizar</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Valor Total Estimado al Finalizar
+                </div>
+                <div
+                  className="text-mono"
+                  style={{
+                    fontSize: '32px',
+                    fontWeight: 510,
+                    color: 'var(--color-paper)',
+                    letterSpacing: '-0.02em',
+                    marginTop: '4px',
+                  }}
+                >
                   {calculation ? formatMoney(calculation.futureValueUSD) : '--'}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  (${calculation ? calculation.futureValueUSD.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '--'} USD)
+                <div style={{ fontSize: '12px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                  (${calculation ? calculation.futureValueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'} USD)
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Ganancia Proyectada</div>
-                  <div className="modal-stat-value text-positive">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div
+                  style={{
+                    background: 'var(--color-carbon)',
+                    border: '1px solid var(--color-graphite)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Ganancia Proyectada
+                  </div>
+                  <div className="text-mono text-positive" style={{ fontSize: '16px', fontWeight: 510, marginTop: '4px' }}>
                     +{calculation ? formatMoney(calculation.totalProfitUSD) : '--'}
                   </div>
                 </div>
 
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Retorno Total (ROI)</div>
-                  <div className="modal-stat-value text-positive">
+                <div
+                  style={{
+                    background: 'var(--color-carbon)',
+                    border: '1px solid var(--color-graphite)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Retorno (ROI)
+                  </div>
+                  <div className="text-mono text-positive" style={{ fontSize: '16px', fontWeight: 510, marginTop: '4px' }}>
                     +{calculation ? `${calculation.roiPercent.toFixed(1)}%` : '--'}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-default)', paddingTop: '12px' }}>
-              Nota: Proyeccion matematica basada en tasa fija constante. Los criptoactivos estan sujetos a volatilidad de mercado.
+            <div style={{ fontSize: '11px', color: 'var(--color-ash)', borderTop: '1px solid var(--color-graphite)', paddingTop: '12px', lineHeight: 1.5 }}>
+              Modelo financiero analítico con tasa constante. Las fluctuaciones del mercado en vivo pueden alterar los rendimientos reales.
             </div>
           </div>
         </div>
@@ -175,3 +213,4 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
     </section>
   );
 }
+

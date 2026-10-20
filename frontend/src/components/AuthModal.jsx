@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { CloseIcon, CheckCircleIcon, AlertCircleIcon } from './Icons';
 
 export default function AuthModal({ isOpen, onClose }) {
   const { login, register, isAuthenticated, user, logout } = useAuth();
@@ -34,175 +35,224 @@ export default function AuthModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
+    <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-content"
+        className="modal-dialog"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '440px', padding: '28px', borderRadius: '16px' }}
+        style={{ maxWidth: '420px' }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0, color: 'var(--text-primary, #fff)' }}>
-            {isAuthenticated ? 'Perfil de Usuario' : (isRegister ? 'Crear Cuenta en CryptoPulse' : 'Iniciar Sesión')}
+        <div className="modal-header">
+          <h2 className="modal-title">
+            {isAuthenticated ? 'Perfil de Usuario' : (isRegister ? 'Crear Cuenta' : 'Iniciar Sesión')}
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94A3B8',
-              fontSize: '1.4rem',
-              cursor: 'pointer',
-            }}
-          >
-            ✕
+          <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar ventana">
+            <CloseIcon size={16} />
           </button>
         </div>
 
         {isAuthenticated ? (
-          <div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '10px', marginBottom: '20px' }}>
-              <div style={{ marginBottom: '8px', color: '#94A3B8', fontSize: '0.85rem' }}>Usuario autenticado</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#38BDF8' }}>{user?.username}</div>
-              <div style={{ fontSize: '0.9rem', color: '#CBD5E1' }}>{user?.email}</div>
-              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Billetera Personal Aislada: </span>
-                <span style={{ fontFamily: 'monospace', color: '#10B981', fontSize: '0.85rem' }}>
-                  {user?.wallet_address || 'Asignada'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div
+              style={{
+                background: 'var(--color-obsidian)',
+                border: '1px solid var(--color-graphite)',
+                padding: '18px',
+                borderRadius: 'var(--radius-cards)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-fog)' }}>
+                Cuenta Autenticada
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    background: 'var(--color-carbon)',
+                    border: '1px solid var(--color-smoke)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: 'var(--color-acid-lime)',
+                  }}
+                >
+                  {user?.username?.slice(0, 2).toUpperCase() || 'CP'}
+                </div>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>{user?.username}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--color-fog)' }}>{user?.email}</div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '6px', paddingTop: '10px', borderTop: '1px solid var(--color-graphite)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  Billetera Personal 1:1 (PostgreSQL 16):
                 </span>
+                <div className="text-mono text-positive" style={{ fontSize: '13px', marginTop: '4px', wordBreak: 'break-all' }}>
+                  {user?.wallet_address || 'Asignada y Aislada'}
+                </div>
               </div>
             </div>
 
             <button
               onClick={() => { logout(); onClose(); }}
-              className="btn btn--danger"
-              style={{ width: '100%', padding: '12px', borderRadius: '8px' }}
+              className="btn-ghost"
+              style={{
+                width: '100%',
+                padding: '10px',
+                color: 'var(--color-coral-red)',
+                borderColor: 'var(--color-coral-red-border)',
+                background: 'var(--color-coral-red-bg)',
+              }}
             >
               Cerrar Sesión
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Conmutador de modo (Linear Nav Pill) */}
+            <div style={{ display: 'flex', gap: '4px', background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', padding: '3px', borderRadius: 'var(--radius-md)' }}>
               <button
                 type="button"
                 onClick={() => { setIsRegister(false); setError(null); }}
                 style={{
                   flex: 1,
-                  padding: '8px',
-                  borderRadius: '6px',
+                  padding: '7px',
+                  borderRadius: '4px',
                   border: 'none',
                   cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  background: !isRegister ? 'var(--accent-color, #2563EB)' : 'transparent',
-                  color: !isRegister ? '#fff' : '#94A3B8',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-ui)',
+                  fontWeight: !isRegister ? 510 : 400,
+                  background: !isRegister ? 'var(--color-carbon)' : 'transparent',
+                  color: !isRegister ? 'var(--color-paper)' : 'var(--color-fog)',
+                  boxShadow: !isRegister ? 'inset 0 0 0 1px var(--color-smoke)' : 'none',
+                  transition: 'all 0.15s',
                 }}
               >
                 Ingresar
               </button>
+
               <button
                 type="button"
                 onClick={() => { setIsRegister(true); setError(null); }}
                 style={{
                   flex: 1,
-                  padding: '8px',
-                  borderRadius: '6px',
+                  padding: '7px',
+                  borderRadius: '4px',
                   border: 'none',
                   cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  background: isRegister ? 'var(--accent-color, #2563EB)' : 'transparent',
-                  color: isRegister ? '#fff' : '#94A3B8',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-ui)',
+                  fontWeight: isRegister ? 510 : 400,
+                  background: isRegister ? 'var(--color-carbon)' : 'transparent',
+                  color: isRegister ? 'var(--color-paper)' : 'var(--color-fog)',
+                  boxShadow: isRegister ? 'inset 0 0 0 1px var(--color-smoke)' : 'none',
+                  transition: 'all 0.15s',
                 }}
               >
-                Registrarse
+                Crear Cuenta
               </button>
             </div>
 
             {isRegister && (
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: '#CBD5E1', marginBottom: '6px' }}>Nombre de usuario</label>
+              <div className="simulate-input-group">
+                <label className="simulate-label">Nombre de usuario</label>
                 <input
                   type="text"
                   required
                   placeholder="ej: satoshi_trader"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    background: 'rgba(15,23,42,0.8)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    color: '#fff',
-                  }}
+                  className="simulate-input"
                 />
               </div>
             )}
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#CBD5E1', marginBottom: '6px' }}>Correo electrónico</label>
+            <div className="simulate-input-group">
+              <label className="simulate-label">Correo electrónico</label>
               <input
                 type="email"
                 required
                 placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  background: 'rgba(15,23,42,0.8)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#fff',
-                }}
+                className="simulate-input"
               />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#CBD5E1', marginBottom: '6px' }}>Contraseña</label>
+            <div className="simulate-input-group">
+              <label className="simulate-label">Contraseña</label>
               <input
                 type="password"
                 required
                 placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  background: 'rgba(15,23,42,0.8)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#fff',
-                }}
+                className="simulate-input"
               />
             </div>
 
             {isRegister && (
-              <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '8px', padding: '10px', marginBottom: '16px', fontSize: '0.8rem', color: '#6EE7B7' }}>
-                ✨ Al registrarte, recibirás automáticamente <strong>tu propia billetera exclusiva</strong> con <strong>$10,000 USD de saldo virtual</strong> para simulaciones.
+              <div
+                style={{
+                  background: 'var(--color-pulse-green-bg)',
+                  border: '1px solid var(--color-pulse-green-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '10px 12px',
+                  fontSize: '12px',
+                  color: 'var(--color-pulse-green)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <CheckCircleIcon size={14} style={{ flexShrink: 0 }} />
+                <span>
+                  Recibirás <strong>tu propia billetera 1:1</strong> en PostgreSQL con <strong>$10,000 USD de saldo virtual</strong>.
+                </span>
               </div>
             )}
 
             {error && (
-              <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px', marginBottom: '16px', fontSize: '0.85rem', color: '#FCA5A5' }}>
-                ⚠️ {error}
+              <div
+                style={{
+                  background: 'var(--color-coral-red-bg)',
+                  border: '1px solid var(--color-coral-red-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '10px 12px',
+                  fontSize: '12px',
+                  color: 'var(--color-coral-red)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <AlertCircleIcon size={14} style={{ flexShrink: 0 }} />
+                <span>{error}</span>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="btn btn--primary"
+              className="btn-lime"
               style={{
                 width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: 'bold',
+                padding: '11px',
+                fontSize: '13px',
+                marginTop: '4px',
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
-              {loading ? 'Procesando...' : (isRegister ? 'Registrarme y Obtener Wallet' : 'Ingresar')}
+              {loading ? 'Procesando...' : (isRegister ? 'Registrarme y Obtener Billetera' : 'Iniciar Sesión')}
             </button>
           </form>
         )}
@@ -210,3 +260,4 @@ export default function AuthModal({ isOpen, onClose }) {
     </div>
   );
 }
+

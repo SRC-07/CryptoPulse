@@ -15,12 +15,13 @@ export default function PortfolioWatchlist({
   fiatRate = 1,
   fiatCurrency = 'USD',
   onOpenAuth,
+  initialCoin = null,
 }) {
   const { user, token, wallet, walletLoading, walletError, refreshWallet, isAuthenticated } = useAuth();
 
   // Estado para la orden de simulación (Compra / Venta)
   const [orderSide, setOrderSide] = useState('BUY');
-  const [selectedCoin, setSelectedCoin] = useState('BTC');
+  const [selectedCoin, setSelectedCoin] = useState(initialCoin || 'BTC');
   const [orderQuantity, setOrderQuantity] = useState('0.1');
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderFeedback, setOrderFeedback] = useState(null); // { type: 'success' | 'error', message: '' }
@@ -29,6 +30,13 @@ export default function PortfolioWatchlist({
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('positions'); // 'positions' | 'simulate' | 'history'
+
+  useEffect(() => {
+    if (initialCoin) {
+      setSelectedCoin(initialCoin);
+      setActiveTab('simulate');
+    }
+  }, [initialCoin]);
 
   // Mapa rápido de criptomonedas para búsqueda O(1) de precio y metadatos
   const cryptoMap = React.useMemo(() => {
@@ -175,103 +183,108 @@ export default function PortfolioWatchlist({
   const totalPnLPercent = totalInvestedUSD > 0 ? (totalPnLUSD / totalInvestedUSD) * 100 : 0;
 
   return (
-    <section className="section fade-in">
+    <section style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
       {/* Cabecera Principal */}
-      <div className="section__header">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 className="section__title">Billetera Personal y Simulador Transaccional</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
+            Billetera Personal y Simulador Transaccional
+          </h2>
+          <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
             {isAuthenticated
               ? `Billetera exclusiva asignada a ${user?.username} con aislamiento estricto y persistencia ACID en PostgreSQL 16.`
-              : 'Simula operaciones de compra/venta y gestiona activos cripto en tiempo real.'}
+              : 'Simula operaciones de compra/venta y gestiona activos cripto en tiempo real con fondos virtuales.'}
           </p>
         </div>
-        <div className="section__actions">
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isAuthenticated && (
             <button
-              className="btn btn--secondary"
+              className="btn-ghost"
               onClick={() => { refreshWallet(); fetchOrderHistory(); }}
               disabled={walletLoading}
               title="Sincronizar billetera con PostgreSQL"
             >
-              <RefreshIcon size={14} />
+              <RefreshIcon size={14} className={walletLoading ? 'loading-spin' : ''} />
               <span>Sincronizar</span>
             </button>
           )}
+
           {isAuthenticated && portfolioAssets.length > 0 && (
             <button
-              className="btn btn--secondary"
+              className="btn-ghost"
               onClick={handleExportCSV}
               title="Exportar posiciones en formato CSV"
             >
               Exportar CSV
             </button>
           )}
+
           {!isAuthenticated && (
             <button
-              className="btn btn--primary"
+              className="btn-lime"
               onClick={onOpenAuth}
             >
-              <span>🔑 Iniciar Sesión / Crear Cuenta</span>
+              Crear Cuenta / Iniciar Sesión &rarr;
             </button>
           )}
         </div>
       </div>
 
-      {/* Banner de Estado / Notificación si no está autenticado */}
+      {/* Banner de Invitado Estilo Linear si no está autenticado */}
       {!isAuthenticated && (
         <div
           style={{
-            background: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(16,185,129,0.08))',
-            border: '1px solid rgba(59,130,246,0.3)',
-            borderRadius: 'var(--radius-md)',
-            padding: '20px 24px',
-            marginBottom: '24px',
+            background: 'var(--color-carbon)',
+            border: '1px solid var(--color-smoke)',
+            borderRadius: 'var(--radius-cards)',
+            padding: '24px 28px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '16px',
+            gap: '24px',
             flexWrap: 'wrap',
+            boxShadow: 'var(--shadow-card-elevated)',
           }}
         >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '1.2rem' }}>🛡️</span>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div style={{ maxWidth: '780px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="badge-tag badge-tag--positive">Entrega 2 &bull; PostgreSQL 16</span>
+              <h3 style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>
                 Billeteras Personales Aisladas (1:1 por Usuario)
               </h3>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '780px', lineHeight: 1.5 }}>
-              En CryptoPulse, cada usuario registrado posee <strong>su propia billetera independiente</strong> en PostgreSQL 16 con
-              <strong> $10,000 USD de saldo virtual</strong>. Las billeteras están estrictamente aisladas mediante llaves criptográficas y
-              bloqueo pesimista ACID contra condiciones de carrera.
+            <p style={{ color: 'var(--color-fog)', fontSize: '13px', lineHeight: 1.6 }}>
+              Cada usuario registrado posee <strong>su propia billetera independiente</strong> con <strong>$10,000 USD de saldo virtual</strong>.
+              Las billeteras están completamente aisladas mediante llaves UUID criptográficas y bloqueo pesimista contra condiciones de carrera.
             </p>
           </div>
+
           <button
-            className="btn btn--primary"
+            className="btn-white-pill"
             onClick={onOpenAuth}
-            style={{ padding: '10px 20px', fontWeight: 600 }}
           >
-            Obtener mi Billetera Personal
+            Obtener mi Billetera Personal &rarr;
           </button>
         </div>
       )}
 
-      {/* Métricas Principales de la Billetera */}
-      <div className="hero__stats" style={{ marginBottom: '24px' }}>
-        <div className="stat-card">
-          <div className="stat-card__label">
-            {isAuthenticated ? 'Dirección de Billetera (Aislada)' : 'Modo Demostración'}
+      {/* Cockpit de Billetera (Linear Command Banner) */}
+      <div className="wallet-banner">
+        <div>
+          <div className="wallet-banner__title">
+            {isAuthenticated ? 'Dirección Aislada (1:1)' : 'Billetera de Demostración'}
           </div>
           <div
-            className="stat-card__value"
+            className="text-mono"
             style={{
-              fontSize: '0.95rem',
-              fontFamily: 'var(--font-mono)',
-              color: isAuthenticated ? 'var(--color-positive)' : 'var(--text-muted)',
+              fontSize: '15px',
+              fontWeight: 510,
+              color: isAuthenticated ? 'var(--color-pulse-green)' : 'var(--color-fog)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              maxWidth: '320px',
             }}
             title={wallet?.wallet_address || user?.wallet_address}
           >
@@ -279,272 +292,297 @@ export default function PortfolioWatchlist({
               ? (wallet?.wallet_address || user?.wallet_address || 'Asignada')
               : 'CP-DEMO-GUEST-WALLET'}
           </div>
-          <div className="stat-card__change" style={{ color: 'var(--text-muted)' }}>
-            {isAuthenticated ? '🔒 Exclusiva - No compartida' : 'Inicia sesión para persistir'}
+          <div className="wallet-banner__sub">
+            {isAuthenticated ? '🔒 Exclusiva en PostgreSQL 16' : 'Modo invitado &bull; Inicia sesión para persistir'}
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card__label">Saldo Líquido Disponible</div>
-          <div className="stat-card__value" style={{ color: 'var(--accent-cyan)' }}>
+        <div>
+          <div className="wallet-banner__title">Saldo Disponible</div>
+          <div className="wallet-banner__balance" style={{ color: 'var(--color-paper)' }}>
             {formatFiat(fiatBalance)}
           </div>
-          <div className="stat-card__change" style={{ color: 'var(--text-muted)' }}>
+          <div className="wallet-banner__sub">
             USD Virtual para Simulación
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card__label">Valor Total del Portafolio</div>
-          <div className="stat-card__value">
+        <div>
+          <div className="wallet-banner__title">Valor Total Portafolio</div>
+          <div className="wallet-banner__balance">
             {formatFiat(totalWalletValueUSD)}
           </div>
-          <div className="stat-card__change" style={{ color: 'var(--text-muted)' }}>
-            Efectivo + Criptoactivos
+          <div className="wallet-banner__sub">
+            Efectivo + {portfolioAssets.length} activos
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card__label">Rendimiento Cripto (P&L)</div>
-          <div className={`stat-card__value ${totalPnLUSD >= 0 ? 'text-positive' : 'text-negative'}`}>
+        <div>
+          <div className="wallet-banner__title">Rendimiento Cripto (P&L)</div>
+          <div
+            className={`wallet-banner__balance ${totalPnLUSD >= 0 ? 'text-positive' : 'text-negative'}`}
+          >
             {totalPnLUSD >= 0 ? '+' : ''}{formatFiat(totalPnLUSD)}
           </div>
-          <div className={`stat-card__change ${totalPnLUSD >= 0 ? 'stat-card__change--positive' : 'stat-card__change--negative'}`}>
-            {totalPnLUSD >= 0 ? <TrendingUpIcon size={14} /> : <TrendingDownIcon size={14} />}
-            <span>{totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}% total</span>
+          <div className="wallet-banner__sub" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span className={`badge-tag ${totalPnLUSD >= 0 ? 'badge-tag--positive' : 'badge-tag--negative'}`}>
+              {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
+            </span>
+            <span>total</span>
           </div>
         </div>
       </div>
 
-      {/* Pestañas de Navegación del Módulo */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-default)', paddingBottom: '12px' }}>
-        <button
-          className={`navbar__link ${activeTab === 'positions' ? 'navbar__link--active' : ''}`}
-          onClick={() => setActiveTab('positions')}
-        >
-          Mis Activos ({portfolioAssets.length})
-        </button>
-        <button
-          className={`navbar__link ${activeTab === 'simulate' ? 'navbar__link--active' : ''}`}
-          onClick={() => setActiveTab('simulate')}
-        >
-          Simulador de Compra / Venta
-        </button>
-        {isAuthenticated && (
+      {/* Pestañas de Navegación del Módulo Estilo Linear */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-graphite)', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
           <button
-            className={`navbar__link ${activeTab === 'history' ? 'navbar__link--active' : ''}`}
-            onClick={() => { setActiveTab('history'); fetchOrderHistory(); }}
+            className={`chip-pill ${activeTab === 'positions' ? 'chip-pill--active' : ''}`}
+            onClick={() => setActiveTab('positions')}
           >
-            Historial de Órdenes ({orders.length})
+            Mis Activos ({portfolioAssets.length})
+          </button>
+          <button
+            className={`chip-pill ${activeTab === 'simulate' ? 'chip-pill--active' : ''}`}
+            onClick={() => setActiveTab('simulate')}
+          >
+            Simulador de Compra / Venta
+          </button>
+          {isAuthenticated && (
+            <button
+              className={`chip-pill ${activeTab === 'history' ? 'chip-pill--active' : ''}`}
+              onClick={() => { setActiveTab('history'); fetchOrderHistory(); }}
+            >
+              Libro de Órdenes ({orders.length})
+            </button>
+          )}
+        </div>
+
+        {activeTab === 'positions' && (
+          <button
+            className="btn-lime"
+            onClick={() => setActiveTab('simulate')}
+            style={{ fontSize: '12px', padding: '6px 14px' }}
+          >
+            <PlusIcon size={13} />
+            <span>Nueva Simulación</span>
           </button>
         )}
       </div>
 
       {/* Pestaña 1: Posiciones / Activos en la Billetera */}
       {activeTab === 'positions' && (
-        <div className="data-card">
-          <div className="data-card__header">
+        <div className="table-card">
+          <div className="table-card__toolbar">
             <div>
-              <span className="data-card__title">Distribución de Activos en Posición</span>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 510, color: 'var(--color-paper)' }}>
+                Distribución de Posiciones en Portafolio
+              </span>
+              <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 {isAuthenticated
                   ? 'Registros persistidos en PostgreSQL con cálculo de P&L en tiempo real.'
-                  : 'Modo invitado: Puedes abrir el simulador para realizar compras de prueba.'}
+                  : 'Modo demostración: Abre el simulador para realizar compras de prueba.'}
               </div>
             </div>
-            <button
-              className="btn btn--primary"
-              onClick={() => setActiveTab('simulate')}
-              style={{ fontSize: '0.84rem', padding: '6px 14px' }}
-            >
-              <PlusIcon size={14} />
-              <span>Nueva Simulación</span>
-            </button>
           </div>
 
           {portfolioAssets.length === 0 ? (
-            <div className="empty-state" style={{ padding: '48px 24px' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💼</div>
-              <div className="empty-state__title">Tu billetera aún no tiene posiciones en criptomonedas</div>
-              <div className="empty-state__text" style={{ maxWidth: '480px', margin: '8px auto 20px' }}>
-                {isAuthenticated
-                  ? `Tienes ${formatFiat(fiatBalance)} disponibles. Utiliza el Simulador de Compra para adquirir tus primeros activos al precio de mercado en vivo.`
-                  : 'Inicia sesión para operar con tu saldo virtual de $10,000 USD o realiza una simulación de prueba en el panel.'}
+            <div style={{ padding: '64px 24px', textAlign: 'center', color: 'var(--color-fog)' }}>
+              <div style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)', marginBottom: '8px' }}>
+                Tu billetera no tiene posiciones activas
               </div>
+              <p style={{ fontSize: '13px', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+                {isAuthenticated
+                  ? `Tienes ${formatFiat(fiatBalance)} disponibles. Ejecuta una orden en el Simulador para adquirir tus primeras criptomonedas a precio de mercado en vivo.`
+                  : 'Inicia sesión para operar con tu saldo virtual de $10,000 USD o haz simulaciones en vivo.'}
+              </p>
               <button
-                className="btn btn--primary"
+                className="btn-lime"
                 onClick={() => setActiveTab('simulate')}
               >
-                Abrir Simulador de Inversión
+                Abrir Simulador de Inversión &rarr;
               </button>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Activo</th>
-                  <th>Cantidad</th>
-                  <th>Precio Compra Prom.</th>
-                  <th>Precio Actual</th>
-                  <th>Valor Total</th>
-                  <th>Rendimiento (P&L)</th>
-                  <th>Acción Rápida</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolioAssets.map((asset) => {
-                  const coinMeta = cryptoMap[asset.symbol] || {};
-                  const livePrice = coinMeta.current_price || asset.average_buy_price;
-                  const isPositive = (asset.pnl_usd ?? 0) >= 0;
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table-linear">
+                <thead>
+                  <tr>
+                    <th>Activo</th>
+                    <th>Cantidad</th>
+                    <th>Precio Compra Prom.</th>
+                    <th>Precio Actual</th>
+                    <th>Valor Total</th>
+                    <th>Rendimiento (P&L)</th>
+                    <th style={{ textAlign: 'right', paddingRight: '20px' }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {portfolioAssets.map((asset) => {
+                    const coinMeta = cryptoMap[asset.symbol] || {};
+                    const livePrice = coinMeta.current_price || asset.average_buy_price;
+                    const isPositive = (asset.pnl_usd ?? 0) >= 0;
 
-                  return (
-                    <tr key={asset.id || asset.symbol}>
-                      <td>
-                        <div className="data-table__coin">
-                          {coinMeta.image_url && (
-                            <img
-                              className="data-table__coin-icon"
-                              src={coinMeta.image_url}
-                              alt={asset.symbol}
-                            />
-                          )}
-                          <div>
-                            <div className="data-table__coin-name">{asset.coin_name || coinMeta.name || asset.symbol}</div>
-                            <div className="data-table__coin-symbol">{asset.symbol}</div>
+                    return (
+                      <tr key={asset.id || asset.symbol}>
+                        <td>
+                          <div className="coin-cell">
+                            {coinMeta.image_url ? (
+                              <img
+                                className="coin-icon"
+                                src={coinMeta.image_url}
+                                alt={asset.symbol}
+                              />
+                            ) : (
+                              <div className="coin-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: 'var(--color-fog)' }}>
+                                {asset.symbol?.slice(0, 2)}
+                              </div>
+                            )}
+                            <div>
+                              <div className="coin-name">{asset.coin_name || coinMeta.name || asset.symbol}</div>
+                              <div className="coin-symbol">{asset.symbol}</div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                        {asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 6 })} {asset.symbol}
-                      </td>
-                      <td className="data-table__price">
-                        ${asset.average_buy_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="data-table__price">
-                        ${livePrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                        {formatFiat(asset.current_value_usd || (asset.quantity * livePrice))}
-                      </td>
-                      <td>
-                        <span className={`data-table__change ${isPositive ? 'data-table__change--positive' : 'data-table__change--negative'}`}>
-                          {isPositive ? '+' : ''}{(asset.pnl_percentage || 0).toFixed(2)}%
-                          <span style={{ fontSize: '0.75rem', opacity: 0.8, marginLeft: '4px' }}>
-                            ({isPositive ? '+' : ''}{formatFiat(asset.pnl_usd || 0)})
+                        </td>
+
+                        <td className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
+                          {asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 6 })} {asset.symbol}
+                        </td>
+
+                        <td className="text-mono" style={{ color: 'var(--color-mist)' }}>
+                          ${asset.average_buy_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+
+                        <td className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
+                          ${livePrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+
+                        <td className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
+                          {formatFiat(asset.current_value_usd || (asset.quantity * livePrice))}
+                        </td>
+
+                        <td>
+                          <span className={`badge-tag ${isPositive ? 'badge-tag--positive' : 'badge-tag--negative'}`}>
+                            {isPositive ? '+' : ''}{(asset.pnl_percentage || 0).toFixed(2)}%
+                            <span style={{ opacity: 0.8, marginLeft: '4px' }}>
+                              ({isPositive ? '+' : ''}{formatFiat(asset.pnl_usd || 0)})
+                            </span>
                           </span>
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn--secondary"
-                          style={{ padding: '4px 10px', fontSize: '0.78rem' }}
-                          onClick={() => {
-                            setSelectedCoin(asset.symbol);
-                            setOrderSide('SELL');
-                            setOrderQuantity(String(asset.quantity));
-                            setActiveTab('simulate');
-                          }}
-                          title="Vender activo"
-                        >
-                          Vender
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+
+                        <td style={{ textAlign: 'right', paddingRight: '20px' }}>
+                          <button
+                            className="btn-trade-sell"
+                            style={{ padding: '4px 12px', fontSize: '12px' }}
+                            onClick={() => {
+                              setSelectedCoin(asset.symbol);
+                              setOrderSide('SELL');
+                              setOrderQuantity(String(asset.quantity));
+                              setActiveTab('simulate');
+                            }}
+                            title="Vender activo"
+                          >
+                            Vender
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
 
       {/* Pestaña 2: Simulador Transaccional (Compra / Venta) */}
       {activeTab === 'simulate' && (
-        <div className="data-card fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="data-card__header">
+        <div className="table-card" style={{ maxWidth: '780px', margin: '0 auto', width: '100%' }}>
+          <div className="table-card__toolbar">
             <div>
-              <span className="data-card__title">Terminal de Simulación de Órdenes</span>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              <span style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)' }}>
+                Terminal de Simulación de Órdenes
+              </span>
+              <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 Ejecuta compras y ventas a precios en vivo con validación ACID y actualización inmediata de saldos.
               </div>
             </div>
+
             <span
+              className="text-mono"
               style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.82rem',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                background: 'rgba(59,130,246,0.1)',
-                color: 'var(--accent-cyan)',
-                border: '1px solid rgba(59,130,246,0.25)',
+                fontSize: '12px',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-pills)',
+                background: 'var(--color-obsidian)',
+                color: 'var(--color-paper)',
+                border: '1px solid var(--color-graphite)',
               }}
             >
               Saldo Disp: {formatFiat(fiatBalance)}
             </span>
           </div>
 
-          <form onSubmit={handleExecuteOrder} style={{ padding: '8px 4px' }}>
-            {/* Selector de Tipo de Operación (Compra vs Venta) */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          <form onSubmit={handleExecuteOrder} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Selector de Tipo de Operación (Compra vs Venta) con Estilo Linear */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <button
                 type="button"
                 onClick={() => setOrderSide('BUY')}
+                className={orderSide === 'BUY' ? 'btn-trade-buy' : 'btn-ghost'}
                 style={{
                   padding: '12px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  border: orderSide === 'BUY' ? '2px solid var(--color-positive)' : '1px solid var(--border-default)',
-                  background: orderSide === 'BUY' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
-                  color: orderSide === 'BUY' ? 'var(--color-positive)' : 'var(--text-secondary)',
-                  transition: 'all 0.2s',
+                  fontWeight: 510,
+                  fontSize: '14px',
+                  background: orderSide === 'BUY' ? 'var(--color-pulse-green)' : 'transparent',
+                  color: orderSide === 'BUY' ? 'var(--color-void)' : 'var(--color-fog)',
+                  borderColor: orderSide === 'BUY' ? 'var(--color-pulse-green)' : 'var(--color-graphite)',
                 }}
               >
-                🟢 Comprar Cripto (BUY)
+                Comprar Cripto (BUY)
               </button>
+
               <button
                 type="button"
                 onClick={() => setOrderSide('SELL')}
+                className={orderSide === 'SELL' ? 'btn-trade-sell' : 'btn-ghost'}
                 style={{
                   padding: '12px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  border: orderSide === 'SELL' ? '2px solid var(--color-negative)' : '1px solid var(--border-default)',
-                  background: orderSide === 'SELL' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-secondary)',
-                  color: orderSide === 'SELL' ? 'var(--color-negative)' : 'var(--text-secondary)',
-                  transition: 'all 0.2s',
+                  fontWeight: 510,
+                  fontSize: '14px',
+                  background: orderSide === 'SELL' ? 'var(--color-coral-red)' : 'transparent',
+                  color: orderSide === 'SELL' ? 'var(--color-paper)' : 'var(--color-fog)',
+                  borderColor: orderSide === 'SELL' ? 'var(--color-coral-red)' : 'var(--color-graphite)',
                 }}
               >
-                🔴 Vender Cripto (SELL)
+                Vender Cripto (SELL)
               </button>
             </div>
 
-            <div className="portfolio-add-grid" style={{ marginBottom: '20px' }}>
-              <div>
-                <label className="converter-label">Seleccionar Activo Cripto</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="simulate-input-group">
+                <label className="simulate-label">Seleccionar Activo Cripto</label>
                 <select
-                  className="converter-select"
+                  className="simulate-input"
                   value={selectedCoin}
                   onChange={(e) => setSelectedCoin(e.target.value.toUpperCase())}
+                  style={{ cursor: 'pointer', background: 'var(--color-obsidian)' }}
                 >
                   {cryptos.map(c => (
                     <option key={c.symbol} value={c.symbol}>
-                      {c.name} ({c.symbol}) - ${c.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {c.name} ({c.symbol}) &bull; ${c.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="converter-label">Cantidad a Operar</label>
+              <div className="simulate-input-group">
+                <label className="simulate-label">Cantidad a Operar</label>
                 <input
                   type="number"
                   step="any"
                   min="0.000001"
-                  className="converter-input"
+                  className="simulate-input"
                   value={orderQuantity}
                   onChange={(e) => setOrderQuantity(e.target.value)}
                   placeholder="ej: 0.25"
@@ -553,76 +591,88 @@ export default function PortfolioWatchlist({
               </div>
             </div>
 
-            {/* Recibo Estimado de la Orden */}
+            {/* Recibo Estimado de la Orden (Precision Slip) */}
             <div
               style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-obsidian)',
+                border: '1px solid var(--color-graphite)',
+                borderRadius: 'var(--radius-md)',
                 padding: '16px',
-                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Precio en Vivo ({selectedCoin}):</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--color-fog)' }}>Precio en Vivo ({selectedCoin}):</span>
+                <span className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
                   ${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Cantidad solicitada:</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--color-fog)' }}>Cantidad solicitada:</span>
+                <span className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
                   {parsedQty} {selectedCoin}
                 </span>
               </div>
+
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   paddingTop: '10px',
-                  borderTop: '1px solid var(--border-default)',
-                  fontSize: '1rem',
-                  fontWeight: 700,
+                  borderTop: '1px solid var(--color-graphite)',
+                  fontSize: '15px',
+                  fontWeight: 510,
+                  alignItems: 'center',
                 }}
               >
-                <span>{orderSide === 'BUY' ? 'Costo Total Estimado:' : 'Ingreso Estimado:'}</span>
-                <span style={{ color: orderSide === 'BUY' ? 'var(--color-positive)' : 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                <span style={{ color: 'var(--color-mist)' }}>
+                  {orderSide === 'BUY' ? 'Costo Total Estimado:' : 'Ingreso Estimado:'}
+                </span>
+                <span
+                  className="text-mono"
+                  style={{
+                    fontSize: '17px',
+                    color: orderSide === 'BUY' ? 'var(--color-paper)' : 'var(--color-pulse-green)',
+                    fontWeight: 510,
+                  }}
+                >
                   {formatFiat(estimatedOrderCostUSD)}
                 </span>
               </div>
             </div>
 
-            {/* Alertas de Feedback */}
+            {/* Feedback Alerts */}
             {orderFeedback && (
               <div
                 style={{
-                  background: orderFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  border: `1px solid ${orderFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
-                  color: orderFeedback.type === 'success' ? '#6EE7B7' : '#FCA5A5',
+                  background: orderFeedback.type === 'success' ? 'var(--color-pulse-green-bg)' : 'var(--color-coral-red-bg)',
+                  border: `1px solid ${orderFeedback.type === 'success' ? 'var(--color-pulse-green-border)' : 'var(--color-coral-red-border)'}`,
+                  color: orderFeedback.type === 'success' ? 'var(--color-pulse-green)' : 'var(--color-coral-red)',
                   padding: '12px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  marginBottom: '20px',
+                  borderRadius: 'var(--radius-md)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
-                  fontSize: '0.88rem',
+                  fontSize: '13px',
                 }}
               >
-                {orderFeedback.type === 'success' ? <CheckCircleIcon size={18} /> : <AlertCircleIcon size={18} />}
+                {orderFeedback.type === 'success' ? <CheckCircleIcon size={16} /> : <AlertCircleIcon size={16} />}
                 <span>{orderFeedback.message}</span>
               </div>
             )}
 
-            {/* Botón de Ejecución */}
+            {/* Botón de Ejecución de la Orden */}
             <button
               type="submit"
               disabled={orderSubmitting || parsedQty <= 0}
-              className={`btn ${orderSide === 'BUY' ? 'btn--primary' : 'btn--secondary'}`}
+              className={orderSide === 'BUY' ? 'btn-lime' : 'btn-trade-sell'}
               style={{
                 width: '100%',
-                padding: '14px',
-                fontSize: '1rem',
-                fontWeight: 700,
+                padding: '12px',
+                fontSize: '14px',
                 cursor: orderSubmitting ? 'not-allowed' : 'pointer',
               }}
             >
@@ -638,98 +688,90 @@ export default function PortfolioWatchlist({
 
       {/* Pestaña 3: Historial Transaccional ACID */}
       {activeTab === 'history' && isAuthenticated && (
-        <div className="data-card fade-in">
-          <div className="data-card__header">
+        <div className="table-card">
+          <div className="table-card__toolbar">
             <div>
-              <span className="data-card__title">Libro Contable de Órdenes (PostgreSQL 16)</span>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              <span style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)' }}>
+                Libro Contable de Órdenes (PostgreSQL 16)
+              </span>
+              <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 Registro inmutable de simulaciones asociadas a tu billetera personal.
               </div>
             </div>
+
             <button
-              className="btn btn--secondary"
+              className="btn-ghost"
               onClick={fetchOrderHistory}
               disabled={ordersLoading}
-              style={{ fontSize: '0.82rem', padding: '4px 10px' }}
+              style={{ fontSize: '12px', padding: '5px 12px' }}
             >
-              <RefreshIcon size={13} />
+              <RefreshIcon size={13} className={ordersLoading ? 'loading-spin' : ''} />
               <span>Refrescar</span>
             </button>
           </div>
 
           {orders.length === 0 ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
-              <div className="empty-state__title">No hay órdenes registradas</div>
-              <div className="empty-state__text">
+            <div style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--color-fog)' }}>
+              <div style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)', marginBottom: '6px' }}>
+                No hay órdenes registradas
+              </div>
+              <div style={{ fontSize: '13px' }}>
                 Tus compras y ventas simuladas aparecerán aquí con su recibo de ejecución y sello temporal.
               </div>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID Orden</th>
-                  <th>Fecha / Hora</th>
-                  <th>Operación</th>
-                  <th>Activo</th>
-                  <th>Cantidad</th>
-                  <th>Precio Ejecución</th>
-                  <th>Total Fiat</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((ord) => (
-                  <tr key={ord.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-                      #{ord.id}
-                    </td>
-                    <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                      {new Date(ord.executed_at).toLocaleString('es-CO')}
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          fontSize: '0.78rem',
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          background: ord.order_type === 'BUY' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: ord.order_type === 'BUY' ? 'var(--color-positive)' : 'var(--color-negative)',
-                        }}
-                      >
-                        {ord.order_type}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{ord.symbol}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)' }}>{ord.quantity}</td>
-                    <td className="data-table__price">
-                      ${ord.execution_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                      {formatFiat(ord.total_fiat)}
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          background: 'rgba(59, 130, 246, 0.15)',
-                          color: '#60A5FA',
-                          border: '1px solid rgba(59, 130, 246, 0.3)',
-                        }}
-                      >
-                        {ord.status}
-                      </span>
-                    </td>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table-linear">
+                <thead>
+                  <tr>
+                    <th>ID Orden</th>
+                    <th>Fecha / Hora</th>
+                    <th>Operación</th>
+                    <th>Activo</th>
+                    <th>Cantidad</th>
+                    <th>Precio Ejecución</th>
+                    <th>Total Fiat</th>
+                    <th style={{ textAlign: 'right', paddingRight: '20px' }}>Estado</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {orders.map((ord) => (
+                    <tr key={ord.id}>
+                      <td className="text-mono" style={{ color: 'var(--color-ash)', fontSize: '12px' }}>
+                        #{ord.id}
+                      </td>
+                      <td style={{ fontSize: '12px', color: 'var(--color-fog)' }}>
+                        {new Date(ord.executed_at).toLocaleString('es-CO')}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge-tag ${ord.order_type === 'BUY' ? 'badge-tag--positive' : 'badge-tag--negative'}`}
+                        >
+                          {ord.order_type}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 510, color: 'var(--color-paper)' }}>{ord.symbol}</td>
+                      <td className="text-mono">{ord.quantity}</td>
+                      <td className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
+                        ${ord.execution_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-mono" style={{ fontWeight: 510, color: 'var(--color-paper)' }}>
+                        {formatFiat(ord.total_fiat)}
+                      </td>
+                      <td style={{ textAlign: 'right', paddingRight: '20px' }}>
+                        <span className="badge-tag badge-tag--neutral">
+                          {ord.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
     </section>
   );
 }
+

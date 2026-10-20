@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import TickerBar from './components/TickerBar';
@@ -18,12 +18,15 @@ function MainLayout() {
   const [currency, setCurrency] = useState('USD');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
 
+  // Datos de Criptomonedas (Market Service)
   const [cryptos, setCryptos] = useState([]);
   const [cryptoLoading, setCryptoLoading] = useState(false);
   const [cryptoError, setCryptoError] = useState(null);
   const [cryptoLastUpdated, setCryptoLastUpdated] = useState(null);
 
+  // Datos Forex (Market Service)
   const [forexRates, setForexRates] = useState([]);
   const [forexMap, setForexMap] = useState({});
   const [forexBase, setForexBase] = useState('USD');
@@ -74,7 +77,8 @@ function MainLayout() {
     fetchForex(newBase);
   };
 
-  const marketMetrics = React.useMemo(() => {
+  // Métricas del Mercado Calculadas
+  const marketMetrics = useMemo(() => {
     if (!cryptos || cryptos.length === 0) return null;
     const topCoin = cryptos[0];
     const totalMarketCap = cryptos.reduce((sum, c) => sum + (c.market_cap || 0), 0);
@@ -105,6 +109,7 @@ function MainLayout() {
 
   return (
     <div className="app">
+      {/* Barra de Navegación Superior */}
       <Navbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -114,108 +119,151 @@ function MainLayout() {
         onOpenAuth={() => setAuthModalOpen(true)}
       />
 
+      {/* Cinta Ticker en Tiempo Real */}
       <TickerBar
         cryptos={cryptos}
         onSelectCoin={() => setActiveTab('markets')}
       />
 
-      {activeTab === 'markets' && (
-        <>
-          {marketMetrics && (
-            <div className="hero__stats" style={{ marginTop: '20px', marginBottom: '24px' }}>
-              <div className="stat-card">
-                <div className="stat-card__label">Activo Lider del Mercado</div>
-                <div className="stat-card__value">
-                  {marketMetrics.topCoin.name}
-                </div>
-                <div className="stat-card__change stat-card__change--positive" style={{ fontFamily: 'var(--font-mono)' }}>
-                  ${marketMetrics.topCoin.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              </div>
+      {/* Hero Section Estilo Linear */}
+      <section className="hero-linear">
+        <div
+          className="hero__announcement"
+          onClick={() => setActiveTab('portfolio')}
+        >
+          <span className="hero__announcement-tag">Entrega 2</span>
+          <span>Billeteras Privadas 1:1 con $10,000 USD de saldo simulado en PostgreSQL 16 &rarr;</span>
+        </div>
 
-              <div className="stat-card">
-                <div className="stat-card__label">Capitalizacion Global Monitoreada</div>
-                <div className="stat-card__value">
-                  {formatLarge(marketMetrics.totalMarketCap)}
-                </div>
-                <div className="stat-card__change" style={{ color: 'var(--text-muted)' }}>
-                  Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
-                </div>
-              </div>
+        <h1 className="hero__title">
+          La plataforma de inteligencia financiera y trading simulado
+        </h1>
 
-              <div className="stat-card">
-                <div className="stat-card__label">Mayor Rendimiento (24h)</div>
-                <div className="stat-card__value" style={{ color: 'var(--accent-cyan)' }}>
-                  {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
-                </div>
-                {marketMetrics.topGainer && (
-                  <div className="stat-card__change stat-card__change--positive">
-                    <TrendingUpIcon size={14} />
-                    <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
-                  </div>
-                )}
-              </div>
+        <p className="hero__subtitle">
+          Cotizaciones consolidadas en tiempo real, persistencia políglota de alta velocidad con MongoDB y PostgreSQL, resiliencia con Circuit Breaker en Redis y balanceo perimetral L7.
+        </p>
 
-              <div className="stat-card">
-                <div className="stat-card__label">Sentimiento del Mercado (24h)</div>
-                <div className="stat-card__value">
-                  {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
-                </div>
-                <div className={`stat-card__change ${marketMetrics.avgChange >= 0 ? 'stat-card__change--positive' : 'stat-card__change--negative'}`}>
-                  {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={14} /> : <TrendingDownIcon size={14} />}
-                  <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
-                </div>
+        <div className="hero__cta-group">
+          <button
+            className="btn-lime"
+            onClick={() => setActiveTab('portfolio')}
+          >
+            Operar en Mi Cartera
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => setStatusModalOpen(true)}
+          >
+            Ver Diagnóstico del Clúster
+          </button>
+        </div>
+
+        {/* Tarjetas de Métricas Resumen */}
+        {marketMetrics && (
+          <div className="metrics-grid">
+            <div className="metric-card">
+              <span className="metric-card__label">Activo Líder</span>
+              <div className="metric-card__value">
+                {marketMetrics.topCoin.name}
+              </div>
+              <div className="metric-card__sub text-mono text-positive">
+                ${marketMetrics.topCoin.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-          )}
 
+            <div className="metric-card">
+              <span className="metric-card__label">Cap. Global Monitoreada</span>
+              <div className="metric-card__value text-mono">
+                {formatLarge(marketMetrics.totalMarketCap)}
+              </div>
+              <div className="metric-card__sub">
+                Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
+              </div>
+            </div>
+
+            <div className="metric-card">
+              <span className="metric-card__label">Mayor Rendimiento (24h)</span>
+              <div className="metric-card__value" style={{ color: 'var(--color-signal-teal)' }}>
+                {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
+              </div>
+              {marketMetrics.topGainer && (
+                <div className="metric-card__sub text-mono text-positive">
+                  <TrendingUpIcon size={13} />
+                  <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
+                </div>
+              )}
+            </div>
+
+            <div className="metric-card">
+              <span className="metric-card__label">Sentimiento del Mercado</span>
+              <div className="metric-card__value">
+                {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
+              </div>
+              <div className={`metric-card__sub text-mono ${marketMetrics.avgChange >= 0 ? 'text-positive' : 'text-negative'}`}>
+                {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={13} /> : <TrendingDownIcon size={13} />}
+                <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Vistas Principales */}
+      <main>
+        {activeTab === 'markets' && (
           <CryptoMarket
             cryptos={cryptos}
             loading={cryptoLoading}
             error={cryptoError}
             lastUpdated={cryptoLastUpdated}
             onRefresh={fetchCryptos}
+            onOpenSimulate={(sym) => {
+              if (sym) setSelectedTradingCoin(sym);
+              setActiveTab('portfolio');
+            }}
           />
-        </>
-      )}
+        )}
 
-      {activeTab === 'converter' && (
-        <CurrencyConverter
-          cryptos={cryptos}
-          forexRates={forexMap}
-          forexBase={forexBase}
-        />
-      )}
+        {activeTab === 'portfolio' && (
+          <PortfolioWatchlist
+            cryptos={cryptos}
+            fiatCurrency={currency}
+            fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
+            onOpenAuth={() => setAuthModalOpen(true)}
+            initialCoin={selectedTradingCoin}
+          />
+        )}
 
-      {activeTab === 'forex' && (
-        <ForexRates
-          rates={forexRates}
-          baseCurrency={forexBase}
-          onCurrencyChange={handleForexCurrencyChange}
-          loading={forexLoading}
-          error={forexError}
-          lastUpdated={forexLastUpdated}
-          onRefresh={() => fetchForex(forexBase)}
-        />
-      )}
+        {activeTab === 'converter' && (
+          <CurrencyConverter
+            cryptos={cryptos}
+            forexRates={forexMap}
+            forexBase={forexBase}
+          />
+        )}
 
-      {activeTab === 'portfolio' && (
-        <PortfolioWatchlist
-          cryptos={cryptos}
-          fiatCurrency={currency}
-          fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
-          onOpenAuth={() => setAuthModalOpen(true)}
-        />
-      )}
+        {activeTab === 'forex' && (
+          <ForexRates
+            rates={forexRates}
+            baseCurrency={forexBase}
+            onCurrencyChange={handleForexCurrencyChange}
+            loading={forexLoading}
+            error={forexError}
+            lastUpdated={forexLastUpdated}
+            onRefresh={() => fetchForex(forexBase)}
+          />
+        )}
 
-      {activeTab === 'roi' && (
-        <RoiCalculator
-          cryptos={cryptos}
-          fiatCurrency={currency}
-          fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
-        />
-      )}
+        {activeTab === 'roi' && (
+          <RoiCalculator
+            cryptos={cryptos}
+            fiatCurrency={currency}
+            fiatRate={currency === 'COP' ? (forexMap.COP || 4120) : currency === 'EUR' ? (forexMap.EUR || 0.92) : 1}
+          />
+        )}
+      </main>
 
+      {/* Modales Globales */}
       <SystemStatusModal
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
@@ -226,32 +274,33 @@ function MainLayout() {
         onClose={() => setAuthModalOpen(false)}
       />
 
-      <footer className="footer">
+      {/* Footer Estilo Linear */}
+      <footer className="footer-linear">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-            CryptoPulse - Plataforma de Inteligencia Financiera
+          <div style={{ fontWeight: 510, color: 'var(--color-paper)' }}>
+            CryptoPulse &bull; Terminal de Inteligencia Financiera
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Cotizaciones consolidadas en tiempo real. Persistencia transaccional y arquitectura de alta disponibilidad.
+          <div style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
+            Persistencia políglota (PostgreSQL 16, MongoDB 7, Redis 7). Billeteras 1:1 aisladas y clúster L7 con least_conn.
           </div>
         </div>
 
-        <div className="footer__links">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
-            className="footer__status-indicator"
             onClick={() => setStatusModalOpen(true)}
+            className="navbar__status-pill"
+            style={{ fontSize: '11px', padding: '3px 9px' }}
           >
-            <span className="navbar__status-dot navbar__status-dot--online"></span>
-            <span>Infraestructura 100% Operativa</span>
+            <span className="navbar__status-dot"></span>
+            <span>Clúster 100% Operativo</span>
           </button>
-          <span style={{ color: 'var(--border-accent)' }}>|</span>
           <a
-            className="footer__link"
             href="/api/docs"
             target="_blank"
             rel="noopener noreferrer"
+            style={{ fontSize: '12px' }}
           >
-            Especificacion OpenAPI
+            OpenAPI Docs &rarr;
           </a>
         </div>
       </footer>

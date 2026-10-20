@@ -3,10 +3,10 @@ import { CloseIcon, RefreshIcon, CheckCircleIcon, AlertCircleIcon } from './Icon
 
 export default function SystemStatusModal({ isOpen, onClose }) {
   const [checks, setChecks] = useState({
-    gateway: { status: 'healthy', responseTime: 12, name: 'API Gateway (Nginx Proxy)' },
-    backend: { status: 'healthy', responseTime: 24, name: 'Market Core Service (FastAPI)' },
-    database: { status: 'healthy', responseTime: 8, name: 'PostgreSQL Relational DB' },
-    coingecko: { status: 'healthy', responseTime: 110, name: 'CoinGecko Market Feed' },
+    gateway: { status: 'healthy', responseTime: 12, name: 'API Gateway (Nginx Proxy L7)' },
+    backend: { status: 'healthy', responseTime: 24, name: 'Market Core Clúster (FastAPI)' },
+    database: { status: 'healthy', responseTime: 8, name: 'PostgreSQL 16 & MongoDB 7' },
+    coingecko: { status: 'healthy', responseTime: 110, name: 'CoinGecko Feed de Mercado' },
     forex: { status: 'healthy', responseTime: 95, name: 'Forex Global Exchange Feed' },
   });
   const [isRunning, setIsRunning] = useState(false);
@@ -23,18 +23,19 @@ export default function SystemStatusModal({ isOpen, onClose }) {
         const updated = { ...checks };
         (data.checks || []).forEach(c => {
           if (c.service === 'market-service') {
-            updated.backend = { status: c.status, responseTime: c.response_time_ms || 20, name: 'Market Core Service (FastAPI)' };
+            updated.backend = { status: c.status, responseTime: c.response_time_ms || 20, name: 'Market Core Clúster (FastAPI)' };
           } else if (c.service === 'postgresql') {
-            updated.database = { status: c.status, responseTime: c.response_time_ms || 8, name: 'PostgreSQL Relational DB' };
+            updated.database = { status: c.status, responseTime: c.response_time_ms || 8, name: 'PostgreSQL 16 & MongoDB 7' };
           } else if (c.service === 'coingecko-api') {
-            updated.coingecko = { status: c.status, responseTime: c.response_time_ms || 120, name: 'CoinGecko Market Feed' };
+            updated.coingecko = { status: c.status, responseTime: c.response_time_ms || 120, name: 'CoinGecko Feed de Mercado' };
           } else if (c.service === 'forex-api' || c.service === 'frankfurter-api') {
             updated.forex = { status: c.status, responseTime: c.response_time_ms || 90, name: 'Forex Global Exchange Feed' };
           }
         });
         setChecks(updated);
       }
-    } catch (e) {
+    } catch {
+      // Manejo silencioso de red
     }
     setLastCheck(new Date().toLocaleTimeString('es-CO'));
     setIsRunning(false);
@@ -44,58 +45,79 @@ export default function SystemStatusModal({ isOpen, onClose }) {
   const allHealthy = servicesList.every(s => s.status === 'healthy');
 
   return (
-    <div className="modal-overlay fade-in" onClick={onClose}>
-      <div className="modal-card" style={{ maxWidth: '620px' }} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-dialog modal-dialog--wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+            <h3 className="modal-title">
               Estado Operativo de la Plataforma
             </h3>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-              Monitoreo de disponibilidad y latencia de infraestructura
+            <span style={{ fontSize: '13px', color: 'var(--color-fog)', marginTop: '2px', display: 'block' }}>
+              Monitoreo perimetral L7, latencia de servicios y persistencia distribuida.
             </span>
           </div>
-          <button className="btn-icon-close" onClick={onClose}>
-            <CloseIcon size={18} />
+          <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar ventana">
+            <CloseIcon size={16} />
           </button>
         </div>
 
-        <div className="modal-body">
+        <div>
+          {/* Tarjeta de Resumen General */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            padding: '14px 18px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: allHealthy ? 'var(--color-positive-bg)' : 'var(--color-negative-bg)',
-            border: `1px solid ${allHealthy ? 'var(--color-positive)' : 'var(--color-negative)'}`,
+            gap: '14px',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-cards)',
+            backgroundColor: allHealthy ? 'var(--color-pulse-green-bg)' : 'var(--color-coral-red-bg)',
+            border: `1px solid ${allHealthy ? 'var(--color-pulse-green-border)' : 'var(--color-coral-red-border)'}`,
             marginBottom: '20px',
           }}>
             {allHealthy ? (
-              <CheckCircleIcon size={22} className="text-positive" />
+              <CheckCircleIcon size={24} className="text-positive" />
             ) : (
-              <AlertCircleIcon size={22} className="text-negative" />
+              <AlertCircleIcon size={24} className="text-negative" />
             )}
             <div>
-              <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                {allHealthy ? 'Todos los Sistemas Operativos' : 'Servicios con Degradacion Parcial'}
+              <div style={{ fontWeight: 510, color: 'var(--color-paper)', fontSize: '15px' }}>
+                {allHealthy ? 'Todos los Sistemas Operativos al 100%' : 'Servicios con Degradación Detectada'}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Ultima comprobacion: {lastCheck} | Alta disponibilidad 99.9%
+              <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
+                Última comprobación: <span className="text-mono">{lastCheck}</span> &bull; Resiliencia Circuit Breaker en Redis activa
               </div>
             </div>
           </div>
 
-          <div className="status-grid" style={{ marginBottom: '20px' }}>
+          {/* Cuadrícula de Microservicios */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px', marginBottom: '24px' }}>
             {servicesList.map((srv, idx) => (
-              <div key={idx} className="status-card">
-                <div className="status-card__header">
-                  <div className="status-card__name">{srv.name}</div>
-                  <span className={`status-card__dot status-card__dot--${srv.status}`}></span>
+              <div
+                key={idx}
+                style={{
+                  background: 'var(--color-obsidian)',
+                  border: '1px solid var(--color-graphite)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 510, color: 'var(--color-paper)' }}>{srv.name}</span>
+                  <span
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      backgroundColor: srv.status === 'healthy' ? 'var(--color-pulse-green)' : 'var(--color-coral-red)',
+                      boxShadow: `0 0 6px ${srv.status === 'healthy' ? 'var(--color-pulse-green)' : 'var(--color-coral-red)'}`,
+                    }}
+                  ></span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Latencia:</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--accent-cyan)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--color-fog)' }}>Latencia:</span>
+                  <span className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
                     {srv.responseTime ? `${Math.round(srv.responseTime)} ms` : '< 20 ms'}
                   </span>
                 </div>
@@ -105,14 +127,14 @@ export default function SystemStatusModal({ isOpen, onClose }) {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
-              className="btn btn--secondary"
+              className="btn-ghost"
               onClick={handleRunDiagnostics}
               disabled={isRunning}
             >
               <RefreshIcon size={14} className={isRunning ? 'loading-spin' : ''} />
               <span>{isRunning ? 'Comprobando...' : 'Verificar Latencia'}</span>
             </button>
-            <button className="btn btn--primary" onClick={onClose}>
+            <button className="btn-white-pill" onClick={onClose}>
               Cerrar
             </button>
           </div>
@@ -121,3 +143,4 @@ export default function SystemStatusModal({ isOpen, onClose }) {
     </div>
   );
 }
+

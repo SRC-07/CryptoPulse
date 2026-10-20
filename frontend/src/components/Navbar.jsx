@@ -9,23 +9,38 @@ export default function Navbar({
   onOpenStatus,
   onOpenAuth,
 }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
   return (
-    <nav className="navbar">
-      <div className="navbar__brand" onClick={() => onTabChange('markets')} style={{ cursor: 'pointer' }}>
-        <div className="navbar__logo">CP</div>
-        <div>
+    <header className="navbar">
+      {/* Brand & Logo */}
+      <div
+        className="navbar__brand"
+        onClick={() => onTabChange('markets')}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className="navbar__logo-glyph">
+          <span>CP</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <span className="navbar__name">CryptoPulse</span>
-          <span className="navbar__tagline">Terminal Financiero</span>
+          <span className="navbar__tagline">Terminal v2.0</span>
         </div>
       </div>
 
-      <div className="navbar__nav">
+      {/* Primary Navigation Tabs */}
+      <nav className="navbar__nav" aria-label="Navegación Principal">
         <button
           className={`navbar__link ${activeTab === 'markets' ? 'navbar__link--active' : ''}`}
           onClick={() => onTabChange('markets')}
         >
-          Mercados Cripto
+          Mercados
+        </button>
+        <button
+          className={`navbar__link ${activeTab === 'portfolio' ? 'navbar__link--active' : ''}`}
+          onClick={() => onTabChange('portfolio')}
+        >
+          Mi Cartera
         </button>
         <button
           className={`navbar__link ${activeTab === 'converter' ? 'navbar__link--active' : ''}`}
@@ -40,91 +55,93 @@ export default function Navbar({
           Tasas Forex
         </button>
         <button
-          className={`navbar__link ${activeTab === 'portfolio' ? 'navbar__link--active' : ''}`}
-          onClick={() => onTabChange('portfolio')}
-        >
-          Mi Portafolio
-        </button>
-        <button
           className={`navbar__link ${activeTab === 'roi' ? 'navbar__link--active' : ''}`}
           onClick={() => onTabChange('roi')}
         >
           Calculadora ROI
         </button>
-      </div>
+      </nav>
 
+      {/* Actions & Profile */}
       <div className="navbar__actions">
+        {/* Selector de Moneda de Referencia */}
         <select
           className="navbar__currency-select"
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value)}
-          title="Moneda de referencia visual"
+          title="Moneda base de visualización"
         >
           <option value="USD">USD ($)</option>
           <option value="COP">COP ($)</option>
           <option value="EUR">EUR (€)</option>
         </select>
 
+        {/* Indicador de Estado del Clúster */}
         <button
-          className="navbar__status-btn"
+          className="navbar__status-pill"
           onClick={onOpenStatus}
-          title="Ver estado de infraestructura"
+          title="Ver diagnóstico de clúster y balanceo least_conn"
         >
-          <span className="navbar__status-dot navbar__status-dot--online"></span>
+          <span className="navbar__status-dot"></span>
           <span>Operativo</span>
         </button>
 
+        {/* Estado de Autenticación */}
         {user ? (
-          <button
-            onClick={onOpenAuth}
-            className="navbar__auth-btn navbar__auth-btn--logged"
-            title={`Billetera: ${user.wallet_address || 'Asignada'}`}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'rgba(59, 130, 246, 0.12)',
-              border: '1px solid rgba(59, 130, 246, 0.35)',
-              color: '#38BDF8',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            <span>👤 {user.username}</span>
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.72rem',
-                background: 'rgba(16, 185, 129, 0.2)',
-                color: '#10B981',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-              }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              className="navbar__user-badge"
+              onClick={() => onTabChange('portfolio')}
+              title={`Billetera: ${user.wallet_address || 'Asignada'}`}
             >
-              {user.wallet_address ? `${user.wallet_address.slice(0, 10)}...` : 'Wallet'}
-            </span>
-          </button>
+              <div className="navbar__user-avatar">
+                {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <span style={{ fontSize: '12px', fontWeight: 510, color: 'var(--color-paper)' }}>
+                {user.username}
+              </span>
+              <span
+                className="text-mono"
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--color-pulse-green)',
+                  background: 'var(--color-pulse-green-bg)',
+                  padding: '1px 6px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-pulse-green-border)'
+                }}
+              >
+                {user.wallet_address ? `${user.wallet_address.slice(0, 8)}...` : 'Wallet 1:1'}
+              </span>
+            </div>
+
+            <button
+              onClick={logout}
+              className="btn-ghost"
+              style={{ padding: '5px 10px', fontSize: '11px' }}
+              title="Cerrar sesión"
+            >
+              Salir
+            </button>
+          </div>
         ) : (
-          <button
-            onClick={onOpenAuth}
-            className="btn btn--primary"
-            style={{
-              padding: '6px 14px',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <span>🔑 Ingresar / Registro</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={onOpenAuth}
+              className="navbar__link"
+              style={{ color: 'var(--color-mist)' }}
+            >
+              Iniciar Sesión
+            </button>
+            <button
+              onClick={onOpenAuth}
+              className="btn-white-pill"
+            >
+              Crear Cuenta
+            </button>
+          </div>
         )}
       </div>
-    </nav>
+    </header>
   );
 }

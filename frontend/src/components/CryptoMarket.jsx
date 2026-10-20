@@ -2,7 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { SearchIcon, RefreshIcon, TrendingUpIcon, TrendingDownIcon, CloseIcon } from './Icons';
 import Sparkline from './Sparkline';
 
-export default function CryptoMarket({ cryptos = [], loading = false, error = null, lastUpdated = null, onRefresh }) {
+export default function CryptoMarket({
+  cryptos = [],
+  loading = false,
+  error = null,
+  lastUpdated = null,
+  onRefresh,
+  onOpenSimulate,
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState('market_cap');
@@ -14,8 +21,8 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
 
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase().trim();
-      list = list.filter(c =>
-        c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q)
+      list = list.filter(
+        c => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q)
       );
     }
 
@@ -71,276 +78,343 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
   };
 
   return (
-    <section className="section fade-in">
-      <div className="section__header">
+    <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
+      {/* Encabezado de Sección */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 className="section__title">Cotizaciones de Criptomonedas</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Precios en tiempo real, volumen transaccional y capitalizacion de mercado.
+          <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
+            Cotizaciones de Criptomonedas
+          </h2>
+          <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
+            Precios consolidados en tiempo real, volumen transaccional y capitalización de mercado global.
           </p>
         </div>
-        <div className="section__actions">
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {lastUpdated && (
-            <span className="section__timestamp">
+            <span style={{ fontSize: '12px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
               Actualizado: {lastUpdated}
             </span>
           )}
           <button
             id="fetch-crypto-prices"
-            className="btn btn--secondary"
+            className="btn-ghost"
             onClick={onRefresh}
             disabled={loading}
           >
-            <RefreshIcon size={15} className={loading ? 'loading-spin' : ''} />
+            <RefreshIcon size={14} className={loading ? 'loading-spin' : ''} />
             <span>{loading ? 'Consultando...' : 'Actualizar'}</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert--error" style={{ marginBottom: '16px' }}>
+        <div style={{
+          background: 'var(--color-coral-red-bg)',
+          border: '1px solid var(--color-coral-red-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 16px',
+          color: 'var(--color-coral-red)',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
           <span>Error al consultar cotizaciones: {error}</span>
         </div>
       )}
 
-      <div className="market-controls">
-        <div className="market-search">
-          <SearchIcon size={18} className="market-search__icon" />
-          <input
-            type="text"
-            className="market-search__input"
-            placeholder="Buscar por activo (ej: Bitcoin, SOL, ETH)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      {/* Contenedor Principal de la Tabla de Mercados Estilo Linear */}
+      <div className="table-card">
+        {/* Barra de Herramientas: Búsqueda y Chips de Filtro */}
+        <div className="table-card__toolbar">
+          <div className="search-input-wrapper">
+            <SearchIcon size={16} style={{ color: 'var(--color-fog)', flexShrink: 0 }} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar por activo o símbolo (ej: BTC, Solana)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        <div className="filter-chips">
-          <button
-            className={`filter-chip ${filterType === 'all' ? 'filter-chip--active' : ''}`}
-            onClick={() => setFilterType('all')}
-          >
-            Todos ({cryptos.length})
-          </button>
-          <button
-            className={`filter-chip ${filterType === 'gainers' ? 'filter-chip--active' : ''}`}
-            onClick={() => setFilterType('gainers')}
-          >
-            Ganadores 24h
-          </button>
-          <button
-            className={`filter-chip ${filterType === 'losers' ? 'filter-chip--active' : ''}`}
-            onClick={() => setFilterType('losers')}
-          >
-            Perdedores 24h
-          </button>
-          <button
-            className={`filter-chip ${filterType === 'top5' ? 'filter-chip--active' : ''}`}
-            onClick={() => setFilterType('top5')}
-          >
-            Top 5
-          </button>
-        </div>
-      </div>
-
-      {loading && cryptos.length === 0 ? (
-        <div className="data-card">
-          <div className="empty-state">
-            <span className="loading-spinner"></span>
-            <div className="empty-state__text">Consultando cotizaciones de mercado...</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              className={`chip-pill ${filterType === 'all' ? 'chip-pill--active' : ''}`}
+              onClick={() => setFilterType('all')}
+            >
+              Todos ({cryptos.length})
+            </button>
+            <button
+              className={`chip-pill ${filterType === 'gainers' ? 'chip-pill--active' : ''}`}
+              onClick={() => setFilterType('gainers')}
+            >
+              Ganadores 24h
+            </button>
+            <button
+              className={`chip-pill ${filterType === 'losers' ? 'chip-pill--active' : ''}`}
+              onClick={() => setFilterType('losers')}
+            >
+              Perdedores 24h
+            </button>
+            <button
+              className={`chip-pill ${filterType === 'top5' ? 'chip-pill--active' : ''}`}
+              onClick={() => setFilterType('top5')}
+            >
+              Top 5
+            </button>
           </div>
         </div>
-      ) : filteredCryptos.length === 0 ? (
-        <div className="data-card">
-          <div className="empty-state">
-            <div className="empty-state__title">No se encontraron resultados</div>
-            <div className="empty-state__text">
-              Intenta cambiar el criterio de busqueda o reiniciar los filtros.
+
+        {/* Estado de Carga o Vacío */}
+        {loading && cryptos.length === 0 ? (
+          <div style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--color-fog)' }}>
+            <span className="loading-spin" style={{ display: 'inline-block', width: '22px', height: '22px', border: '2px solid var(--color-graphite)', borderTopColor: 'var(--color-mist)', borderRadius: '50%', marginBottom: '12px' }}></span>
+            <div style={{ fontSize: '13px' }}>Consultando libro de órdenes y cotizaciones en vivo...</div>
+          </div>
+        ) : filteredCryptos.length === 0 ? (
+          <div style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--color-fog)' }}>
+            <div style={{ fontSize: '15px', color: 'var(--color-paper)', fontWeight: 510, marginBottom: '6px' }}>
+              No se encontraron activos
+            </div>
+            <div style={{ fontSize: '13px' }}>
+              Prueba con otro término de búsqueda o restablece los filtros.
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="data-card">
-          <div className="data-card__header">
-            <span className="data-card__title">Mercado Activo</span>
-            <span className="data-card__badge">Datos en Vivo</span>
-          </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th style={{ width: '48px' }}>#</th>
-                <th>Activo</th>
-                <th
-                  onClick={() => toggleSort('price')}
-                  style={{ cursor: 'pointer' }}
-                  title="Ordenar por precio"
-                >
-                  Precio (USD) {sortBy === 'price' ? (sortOrder === 'desc' ? ' (v)' : ' (^)') : ''}
-                </th>
-                <th
-                  onClick={() => toggleSort('change')}
-                  style={{ cursor: 'pointer' }}
-                  title="Ordenar por cambio"
-                >
-                  Cambio 24h {sortBy === 'change' ? (sortOrder === 'desc' ? ' (v)' : ' (^)') : ''}
-                </th>
-                <th>Volumen 24h</th>
-                <th
-                  onClick={() => toggleSort('market_cap')}
-                  style={{ cursor: 'pointer' }}
-                  title="Ordenar por capitalizacion"
-                >
-                  Cap. Mercado {sortBy === 'market_cap' ? (sortOrder === 'desc' ? ' (v)' : ' (^)') : ''}
-                </th>
-                <th>Tendencia</th>
-                <th style={{ textAlign: 'right' }}>Detalles</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCryptos.map((coin, idx) => (
-                <tr
-                  key={coin.coin_id || idx}
-                  className="data-table__row-clickable"
-                  onClick={() => setSelectedCoin(coin)}
-                >
-                  <td style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
-                    {idx + 1}
-                  </td>
-                  <td>
-                    <div className="data-table__coin">
-                      {coin.image_url && (
-                        <img
-                          className="data-table__coin-icon"
-                          src={coin.image_url}
-                          alt={coin.name}
-                          loading="lazy"
-                        />
-                      )}
-                      <div>
-                        <div className="data-table__coin-name">{coin.name}</div>
-                        <div className="data-table__coin-symbol">{coin.symbol}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="data-table__price">
-                    {formatPrice(coin.current_price)}
-                  </td>
-                  <td>
-                    {coin.price_change_percentage_24h != null ? (
-                      <span className={`data-table__change ${
-                        coin.price_change_percentage_24h >= 0
-                          ? 'data-table__change--positive'
-                          : 'data-table__change--negative'
-                      }`}>
-                        {coin.price_change_percentage_24h >= 0 ? '+' : ''}
-                        {coin.price_change_percentage_24h.toFixed(2)}%
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>--</span>
-                    )}
-                  </td>
-                  <td className="data-table__volume">
-                    {formatLarge(coin.total_volume)}
-                  </td>
-                  <td className="data-table__volume">
-                    {formatLarge(coin.market_cap)}
-                  </td>
-                  <td style={{ width: '120px' }}>
-                    <Sparkline
-                      points={coin.sparkline_in_7d}
-                      isPositive={(coin.price_change_percentage_24h || 0) >= 0}
-                    />
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button
-                      className="btn-text-action"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCoin(coin);
-                      }}
-                    >
-                      Ver Ficha
-                    </button>
-                  </td>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table-linear">
+              <thead>
+                <tr>
+                  <th style={{ width: '48px', textAlign: 'center' }}>#</th>
+                  <th>Activo</th>
+                  <th
+                    className="sortable"
+                    onClick={() => toggleSort('price')}
+                    title="Ordenar por precio"
+                  >
+                    Precio (USD) {sortBy === 'price' ? (sortOrder === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                  <th
+                    className="sortable"
+                    onClick={() => toggleSort('change')}
+                    title="Ordenar por cambio 24h"
+                  >
+                    Cambio 24h {sortBy === 'change' ? (sortOrder === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                  <th>Volumen 24h</th>
+                  <th
+                    className="sortable"
+                    onClick={() => toggleSort('market_cap')}
+                    title="Ordenar por capitalización"
+                  >
+                    Cap. Mercado {sortBy === 'market_cap' ? (sortOrder === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                  <th style={{ width: '130px' }}>Tendencia 7d</th>
+                  <th style={{ textAlign: 'right', paddingRight: '20px' }}>Acción</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredCryptos.map((coin, idx) => {
+                  const isPositive = (coin.price_change_percentage_24h || 0) >= 0;
+                  return (
+                    <tr
+                      key={coin.coin_id || coin.symbol || idx}
+                      onClick={() => setSelectedCoin(coin)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td style={{ textAlign: 'center', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                        {idx + 1}
+                      </td>
 
+                      <td>
+                        <div className="coin-cell">
+                          {coin.image_url ? (
+                            <img
+                              className="coin-icon"
+                              src={coin.image_url}
+                              alt={coin.name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="coin-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: 'var(--color-fog)' }}>
+                              {coin.symbol?.slice(0, 2)}
+                            </div>
+                          )}
+                          <div>
+                            <div className="coin-name">{coin.name}</div>
+                            <div className="coin-symbol">{coin.symbol}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="text-mono" style={{ color: 'var(--color-paper)', fontWeight: 510 }}>
+                        {formatPrice(coin.current_price)}
+                      </td>
+
+                      <td>
+                        {coin.price_change_percentage_24h != null ? (
+                          <span className={`badge-tag ${isPositive ? 'badge-tag--positive' : 'badge-tag--negative'}`}>
+                            {isPositive ? '+' : ''}{coin.price_change_percentage_24h.toFixed(2)}%
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>--</span>
+                        )}
+                      </td>
+
+                      <td className="text-mono" style={{ color: 'var(--color-mist)' }}>
+                        {formatLarge(coin.total_volume)}
+                      </td>
+
+                      <td className="text-mono" style={{ color: 'var(--color-mist)' }}>
+                        {formatLarge(coin.market_cap)}
+                      </td>
+
+                      <td>
+                        <Sparkline
+                          points={coin.sparkline_in_7d}
+                          isPositive={isPositive}
+                        />
+                      </td>
+
+                      <td style={{ textAlign: 'right', paddingRight: '20px' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                          <button
+                            className="btn-ghost"
+                            style={{ padding: '4px 10px', fontSize: '12px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedCoin(coin);
+                            }}
+                          >
+                            Ficha
+                          </button>
+                          {onOpenSimulate && (
+                            <button
+                              className="btn-ghost"
+                              style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-acid-lime)', borderColor: 'rgba(228, 242, 34, 0.3)' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenSimulate(coin.symbol);
+                              }}
+                            >
+                              Operar
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Ficha Técnica Estilo Linear Command Dialog */}
       {selectedCoin && (
-        <div className="modal-overlay fade-in" onClick={() => setSelectedCoin(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={() => setSelectedCoin(null)}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="data-table__coin">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 {selectedCoin.image_url && (
                   <img
-                    className="data-table__coin-icon"
-                    style={{ width: '36px', height: '36px' }}
                     src={selectedCoin.image_url}
                     alt={selectedCoin.name}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid var(--color-smoke)' }}
                   />
                 )}
                 <div>
-                  <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>{selectedCoin.name}</h3>
-                  <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{selectedCoin.symbol}</span>
+                  <h3 className="modal-title">{selectedCoin.name}</h3>
+                  <span style={{ color: 'var(--color-fog)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                    {selectedCoin.symbol} &bull; Cotización Oficial
+                  </span>
                 </div>
               </div>
-              <button className="btn-icon-close" onClick={() => setSelectedCoin(null)}>
-                <CloseIcon size={18} />
+
+              <button className="modal-close-btn" onClick={() => setSelectedCoin(null)} aria-label="Cerrar modal">
+                <CloseIcon size={16} />
               </button>
             </div>
 
-            <div className="modal-body">
-              <div className="modal-stat-grid">
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Precio Actual</div>
-                  <div className="modal-stat-value" style={{ color: 'var(--accent-cyan)' }}>
-                    {formatPrice(selectedCoin.current_price)}
-                  </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', margin: '16px 0 24px' }}>
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Precio Actual
                 </div>
-
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Variacion 24h</div>
-                  <div className={`modal-stat-value ${selectedCoin.price_change_percentage_24h >= 0 ? 'text-positive' : 'text-negative'}`}>
-                    {selectedCoin.price_change_percentage_24h >= 0 ? '+' : ''}
-                    {selectedCoin.price_change_percentage_24h?.toFixed(2)}%
-                  </div>
-                </div>
-
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Maximo (24h)</div>
-                  <div className="modal-stat-value text-positive">
-                    {selectedCoin.high_24h ? formatPrice(selectedCoin.high_24h) : '--'}
-                  </div>
-                </div>
-
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Minimo (24h)</div>
-                  <div className="modal-stat-value text-negative">
-                    {selectedCoin.low_24h ? formatPrice(selectedCoin.low_24h) : '--'}
-                  </div>
-                </div>
-
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Capitalizacion de Mercado</div>
-                  <div className="modal-stat-value">
-                    {formatLarge(selectedCoin.market_cap)}
-                  </div>
-                </div>
-
-                <div className="modal-stat-item">
-                  <div className="modal-stat-label">Volumen Negociado (24h)</div>
-                  <div className="modal-stat-value">
-                    {formatLarge(selectedCoin.total_volume)}
-                  </div>
+                <div style={{ fontSize: '18px', fontWeight: 510, color: 'var(--color-paper)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  {formatPrice(selectedCoin.current_price)}
                 </div>
               </div>
 
-              <div className="modal-footer-note">
-                Activo cotizado globalmente. Datos provistos con verificacion de integridad y persistencia.
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Variación 24h
+                </div>
+                <div className={`text-mono ${selectedCoin.price_change_percentage_24h >= 0 ? 'text-positive' : 'text-negative'}`} style={{ fontSize: '18px', fontWeight: 510, marginTop: '4px' }}>
+                  {selectedCoin.price_change_percentage_24h >= 0 ? '+' : ''}
+                  {selectedCoin.price_change_percentage_24h?.toFixed(2)}%
+                </div>
               </div>
+
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Máximo 24h
+                </div>
+                <div className="text-mono text-positive" style={{ fontSize: '15px', fontWeight: 510, marginTop: '4px' }}>
+                  {selectedCoin.high_24h ? formatPrice(selectedCoin.high_24h) : '--'}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Mínimo 24h
+                </div>
+                <div className="text-mono text-negative" style={{ fontSize: '15px', fontWeight: 510, marginTop: '4px' }}>
+                  {selectedCoin.low_24h ? formatPrice(selectedCoin.low_24h) : '--'}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Cap. de Mercado
+                </div>
+                <div className="text-mono" style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)', marginTop: '4px' }}>
+                  {formatLarge(selectedCoin.market_cap)}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Volumen Negociado
+                </div>
+                <div className="text-mono" style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)', marginTop: '4px' }}>
+                  {formatLarge(selectedCoin.total_volume)}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                className="btn-ghost"
+                onClick={() => setSelectedCoin(null)}
+              >
+                Cerrar
+              </button>
+              {onOpenSimulate && (
+                <button
+                  className="btn-lime"
+                  onClick={() => {
+                    const sym = selectedCoin.symbol;
+                    setSelectedCoin(null);
+                    onOpenSimulate(sym);
+                  }}
+                >
+                  Simular Orden con {selectedCoin.symbol} &rarr;
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -348,3 +422,4 @@ export default function CryptoMarket({ cryptos = [], loading = false, error = nu
     </section>
   );
 }
+
