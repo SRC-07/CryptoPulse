@@ -73,6 +73,7 @@ async def save_crypto_ticks(coins: List[Dict[str, Any]]):
                 "price_change_percentage_24h": coin.get("price_change_percentage_24h"),
                 "total_volume": coin.get("total_volume"),
                 "image_url": coin.get("image_url"),
+                "sparkline_in_7d": coin.get("sparkline_in_7d"),
                 "created_at": now,
             })
 
@@ -110,6 +111,7 @@ async def get_crypto_history_from_mongo(symbol: Optional[str] = None, limit: int
                 "price_change_percentage_24h": doc.get("price_change_percentage_24h"),
                 "total_volume": doc.get("total_volume"),
                 "image_url": doc.get("image_url"),
+                "sparkline_in_7d": doc.get("sparkline_in_7d"),
                 "last_updated": doc.get("created_at"),
                 "created_at": doc.get("created_at"),
             })

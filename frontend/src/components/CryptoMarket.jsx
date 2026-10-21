@@ -302,6 +302,8 @@ export default function CryptoMarket({
                         <Sparkline
                           points={coin.sparkline_in_7d}
                           isPositive={isPositive}
+                          change24h={coin.price_change_percentage_24h}
+                          symbol={coin.symbol}
                         />
                       </td>
 
@@ -366,7 +368,29 @@ export default function CryptoMarket({
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', margin: '16px 0 24px' }}>
+            {/* Gráfico de tendencia 7D en la Ficha Técnica */}
+            <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '14px 16px', margin: '14px 0 10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Tendencia de Precios 7 Días
+                </span>
+                <span style={{ fontSize: '11px', color: (selectedCoin.price_change_percentage_24h || 0) >= 0 ? 'var(--color-pulse-green)' : 'var(--color-coral-red)', fontFamily: 'var(--font-mono)' }}>
+                  {(selectedCoin.price_change_percentage_24h || 0) >= 0 ? 'Trayectoria Alcista (+)' : 'Trayectoria Bajista (-)'}
+                </span>
+              </div>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <Sparkline
+                  points={selectedCoin.sparkline_in_7d}
+                  isPositive={(selectedCoin.price_change_percentage_24h || 0) >= 0}
+                  change24h={selectedCoin.price_change_percentage_24h}
+                  symbol={selectedCoin.symbol}
+                  width={380}
+                  height={56}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', margin: '10px 0 24px' }}>
               <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
                 <div style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Precio Actual

@@ -387,7 +387,11 @@ async def fetch_crypto_prices(
                         "low_24h": float(coin.get("low_24h") or 0) if coin.get("low_24h") is not None else None,
                         "total_volume": float(coin.get("total_volume") or 0),
                         "image_url": coin.get("image"),
-                        "sparkline_in_7d": sparkline_prices[-24:] if sparkline_prices else None,
+                        "sparkline_in_7d": (
+                            sparkline_prices[::2]
+                            if (sparkline_prices and len(sparkline_prices) > 40)
+                            else sparkline_prices
+                        ),
                     })
 
                 result = {
