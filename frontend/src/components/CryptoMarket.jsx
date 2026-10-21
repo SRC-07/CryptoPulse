@@ -17,6 +17,51 @@ export default function CryptoMarket({
   const [sortBy, setSortBy] = useState('market_cap');
   const [sortOrder, setSortOrder] = useState('desc');
   const [selectedCoin, setSelectedCoin] = useState(null);
+  const [alertPrice, setAlertPrice] = useState('');
+  const [alertSuccess, setAlertSuccess] = useState(null);
+
+  // Persistencia de preferencias: Monedas favoritas en localStorage
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_favorites');
+      return saved ? JSON.parse(saved) : ['BTC', 'ETH', 'SOL'];
+    } catch {
+      return ['BTC', 'ETH', 'SOL'];
+    }
+  });
+
+  // Persistencia de alertas de precio configurables
+  const [alerts, setAlerts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_price_alerts');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleFavorite = (symbol) => {
+    const s = symbol.toUpperCase();
+    setFavorites(prev => {
+      const next = prev.includes(s) ? prev.filter(item => item !== s) : [...prev, s];
+      try {
+        localStorage.setItem('cryptopulse_favorites', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleSaveAlert = (symbol, price) => {
+    if (!price || isNaN(price)) return;
+    const s = symbol.toUpperCase();
+    const nextAlerts = { ...alerts, [s]: parseFloat(price) };
+    setAlerts(nextAlerts);
+    try {
+      localStorage.setItem('cryptopulse_price_alerts', JSON.stringify(nextAlerts));
+    } catch {}
+    setAlertSuccess(`Alerta guardada para ${s} en $${parseFloat(price).toLocaleString('en-US')}`);
+    setTimeout(() => setAlertSuccess(null), 3000);
+  };
 
   const filteredCryptos = useMemo(() => {
     let list = [...cryptos];
@@ -34,6 +79,8 @@ export default function CryptoMarket({
       list = list.filter(c => (c.price_change_percentage_24h || 0) < 0);
     } else if (filterType === 'top5') {
       list = list.slice(0, 5);
+    } else if (filterType === 'favorites') {
+      list = list.filter(c => favorites.includes(c.symbol.toUpperCase()));
     }
 
     list.sort((a, b) => {
@@ -54,7 +101,7 @@ export default function CryptoMarket({
     });
 
     return list;
-  }, [cryptos, searchTerm, filterType, sortBy, sortOrder]);
+  }, [cryptos, searchTerm, filterType, sortBy, sortOrder, favorites]);
 
   const toggleSort = (field) => {
     if (sortBy === field) {
@@ -186,6 +233,13 @@ export default function CryptoMarket({
               Perdedores 24h
             </button>
             <button
+              className={`chip-pill ${filterType === 'favorites' ? 'chip-pill--active' : ''}`}
+              onClick={() => setFilterType('favorites')}
+              aria-label="Filtrar monedas favoritas"
+            >
+              ★ Favoritas ({favorites.length})
+            </button>
+            <button
               className={`chip-pill ${filterType === 'top5' ? 'chip-pill--active' : ''}`}
               onClick={() => setFilterType('top5')}
             >
@@ -252,7 +306,28 @@ export default function CryptoMarket({
                       style={{ cursor: 'pointer' }}
                     >
                       <td style={{ textAlign: 'center', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
-                        {idx + 1}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(coin.symbol);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: favorites.includes(coin.symbol?.toUpperCase()) ? 'var(--color-acid-lime)' : 'var(--color-smoke)',
+                              fontSize: '13px',
+                              padding: 0,
+                              lineHeight: 1,
+                            }}
+                            title={favorites.includes(coin.symbol?.toUpperCase()) ? 'Quitar de favoritas' : 'Añadir a favoritas'}
+                            aria-label={`Favorito ${coin.symbol}`}
+                          >
+                            {favorites.includes(coin.symbol?.toUpperCase()) ? '★' : '☆'}
+                          </button>
+                          <span>{idx + 1}</span>
+                        </div>
                       </td>
 
                       <td>
@@ -445,6 +520,51 @@ export default function CryptoMarket({
                   {formatLarge(selectedCoin.total_volume)}
                 </div>
               </div>
+            </div>
+
+            {/* Configuración de Alerta de Variación de Precio (Usabilidad) */}
+            <div style={{ background: 'var(--color-obsidian)', border: '1px solid var(--color-graphite)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-fog)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Alerta Personalizada de Precio
+                </span>
+                {alerts[selectedCoin.symbol?.toUpperCase()] && (
+                  <span style={{ fontSize: '11px', color: 'var(--color-acid-lime)', fontFamily: 'var(--font-mono)' }}>
+                    Activa: ${alerts[selectedCoin.symbol.toUpperCase()].toLocaleString('en-US')} USD
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="number"
+                  placeholder={`Umbral USD (ej: ${(selectedCoin.current_price * 1.05).toFixed(2)})`}
+                  value={alertPrice}
+                  onChange={(e) => setAlertPrice(e.target.value)}
+                  style={{
+                    flex: 1,
+                    background: 'var(--color-slate)',
+                    border: '1px solid var(--color-smoke)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 12px',
+                    color: 'var(--color-paper)',
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-mono)',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  className="btn-primary"
+                  style={{ padding: '8px 14px', fontSize: '12px' }}
+                  onClick={() => handleSaveAlert(selectedCoin.symbol, alertPrice)}
+                >
+                  Guardar Alerta
+                </button>
+              </div>
+              {alertSuccess && (
+                <div style={{ fontSize: '11px', color: 'var(--color-pulse-green)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
+                  {alertSuccess}
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>

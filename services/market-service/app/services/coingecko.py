@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import time
 from app.config import get_settings
@@ -365,47 +366,52 @@ async def fetch_crypto_prices(
     }
     headers = {"User-Agent": settings.HTTP_USER_AGENT}
 
-    try:
-        async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT, headers=headers, follow_redirects=True) as client:
-            response = await client.get(url, params=params)
+    for attempt in range(2):
+        try:
+            async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT, headers=headers, follow_redirects=True) as client:
+                response = await client.get(url, params=params)
 
-            if response.status_code == 200:
-                coins = response.json()
-                normalized = []
-                for coin in coins:
-                    sparkline_data = coin.get("sparkline_in_7d", {})
-                    sparkline_prices = sparkline_data.get("price") if isinstance(sparkline_data, dict) else None
-                    normalized.append({
-                        "coin_id": coin.get("id", ""),
-                        "symbol": coin.get("symbol", "").upper(),
-                        "name": coin.get("name", ""),
-                        "current_price": float(coin.get("current_price") or 0),
-                        "market_cap": float(coin.get("market_cap") or 0),
-                        "price_change_24h": float(coin.get("price_change_24h") or 0),
-                        "price_change_percentage_24h": float(coin.get("price_change_percentage_24h") or 0),
-                        "high_24h": float(coin.get("high_24h") or 0) if coin.get("high_24h") is not None else None,
-                        "low_24h": float(coin.get("low_24h") or 0) if coin.get("low_24h") is not None else None,
-                        "total_volume": float(coin.get("total_volume") or 0),
-                        "image_url": coin.get("image"),
-                        "sparkline_in_7d": (
-                            sparkline_prices[::2]
-                            if (sparkline_prices and len(sparkline_prices) > 40)
-                            else sparkline_prices
-                        ),
-                    })
+                if response.status_code == 200:
+                    coins = response.json()
+                    normalized = []
+                    for coin in coins:
+                        sparkline_data = coin.get("sparkline_in_7d", {})
+                        sparkline_prices = sparkline_data.get("price") if isinstance(sparkline_data, dict) else None
+                        normalized.append({
+                            "coin_id": coin.get("id", ""),
+                            "symbol": coin.get("symbol", "").upper(),
+                            "name": coin.get("name", ""),
+                            "current_price": float(coin.get("current_price") or 0),
+                            "market_cap": float(coin.get("market_cap") or 0),
+                            "price_change_24h": float(coin.get("price_change_24h") or 0),
+                            "price_change_percentage_24h": float(coin.get("price_change_percentage_24h") or 0),
+                            "high_24h": float(coin.get("high_24h") or 0) if coin.get("high_24h") is not None else None,
+                            "low_24h": float(coin.get("low_24h") or 0) if coin.get("low_24h") is not None else None,
+                            "total_volume": float(coin.get("total_volume") or 0),
+                            "image_url": coin.get("image"),
+                            "sparkline_in_7d": (
+                                sparkline_prices[::2]
+                                if (sparkline_prices and len(sparkline_prices) > 40)
+                                else sparkline_prices
+                            ),
+                        })
 
-                result = {
-                    "status": "success",
-                    "source": "coingecko",
-                    "vs_currency": vs_currency.lower(),
-                    "count": len(normalized),
-                    "data": normalized,
-                }
-                _crypto_cache[cache_key] = {"timestamp": now, "payload": result}
-                return result
+                    result = {
+                        "status": "success",
+                        "source": "coingecko",
+                        "vs_currency": vs_currency.lower(),
+                        "count": len(normalized),
+                        "data": normalized,
+                    }
+                    _crypto_cache[cache_key] = {"timestamp": now, "payload": result}
+                    return result
+                elif response.status_code == 429 and attempt == 0:
+                    # En caso de rate-limit temporal, pausa breve progresiva antes del reintento
+                    await asyncio.sleep(0.5)
 
-    except Exception:
-        pass
+        except Exception:
+            if attempt == 0:
+                await asyncio.sleep(0.5)
 
     if cache_key in _crypto_cache:
         stale = _crypto_cache[cache_key]["payload"]

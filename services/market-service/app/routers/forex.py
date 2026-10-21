@@ -8,6 +8,7 @@ from app.models import ForexRate
 from app.schemas import ForexRatesResponse, ForexRateResponse
 from app.services.frankfurter import fetch_forex_rates
 from app.mongodb import save_forex_ticks
+from app.services.redis_cache import get_cached, set_cached
 
 router = APIRouter(prefix="/api/forex", tags=["Tasas de Cambio"])
 
@@ -21,8 +22,24 @@ async def get_forex_rates(
     ),
     db: AsyncSession = Depends(get_db),
 ):
+    cache_key = f"forex:rates:{base.upper()}:{targets}"
+
+    # 1. Capa de Rendimiento: Caché Distribuido en Redis 7 (L1)
+    cached_payload = await get_cached(cache_key)
+    if cached_payload:
+        return ForexRatesResponse(
+            status="success",
+            source="redis-cache-l1",
+            base=cached_payload["base"],
+            rates=cached_payload["rates"],
+            data=[ForexRateResponse(**rate) for rate in cached_payload["data"]],
+        )
+
     try:
         result = await fetch_forex_rates(base=base, targets=targets)
+
+        # Almacenar en Caché Redis 7 con TTL de 60 segundos
+        await set_cached(cache_key, result, ttl=60)
 
         # 1. Persistencia primaria en MongoDB 7 (Documental - E1)
         try:

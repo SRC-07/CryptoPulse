@@ -75,10 +75,28 @@ export default function Navbar({
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value)}
           title="Moneda de visualización"
+          aria-label="Seleccionar moneda de referencia"
         >
           <option value="USD">USD ($)</option>
           <option value="COP">COP ($)</option>
           <option value="EUR">EUR (€)</option>
+        </select>
+
+        {/* Selector de Idioma (Soporte multilingüe - Usabilidad) */}
+        <select
+          className="navbar__currency-select"
+          defaultValue="ES"
+          onChange={(e) => {
+            try {
+              localStorage.setItem('cryptopulse_lang', e.target.value);
+            } catch {}
+          }}
+          title="Idioma de la interfaz"
+          aria-label="Seleccionar idioma"
+          style={{ width: '56px', padding: '4px 6px' }}
+        >
+          <option value="ES">ES</option>
+          <option value="EN">EN</option>
         </select>
 
         {/* Estado de Autenticación */}

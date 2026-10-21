@@ -49,9 +49,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi import WebSocket, WebSocketDisconnect
+import json
+
 app.include_router(health.router)
 app.include_router(crypto.router)
 app.include_router(forex.router)
+
+
+@app.websocket("/ws/prices")
+async def websocket_prices(websocket: WebSocket):
+    """Transmisión en tiempo real de cotizaciones mediante WebSockets (Eficiencia)."""
+    await websocket.accept()
+    try:
+        from app.services.coingecko import fetch_crypto_prices
+        while True:
+            prices = await fetch_crypto_prices(per_page=10)
+            await websocket.send_text(json.dumps({
+                "type": "PRICE_UPDATE",
+                "source": prices.get("source", "market-ws"),
+                "count": prices.get("count", 0),
+                "data": prices.get("data", []),
+            }))
+            await asyncio.sleep(5)
+    except (WebSocketDisconnect, asyncio.CancelledError):
+        pass
+    except Exception:
+        pass
 
 
 @app.get("/", tags=["Root"])
