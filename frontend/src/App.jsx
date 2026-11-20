@@ -94,7 +94,7 @@ function MainLayout() {
     } catch {}
     return 2;
   });
-  const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
+  const [selectedTradingCoin, setSelectedTradingCoin] = useState(null);
 
   // Datos de Criptomonedas (Market Service con Hidratación Instantánea)
   const [cryptos, setCryptos] = useState(() => {
@@ -381,6 +381,7 @@ function MainLayout() {
             fiatRate={currentFiatRate}
             onOpenAuth={() => setAuthModalOpen(true)}
             initialCoin={selectedTradingCoin}
+            onClearInitialCoin={() => setSelectedTradingCoin(null)}
           />
         )}
 

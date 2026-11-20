@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { BellIcon, CloseIcon, CheckCircleIcon, AlertCircleIcon, RefreshIcon, TrendingUpIcon, TrendingDownIcon } from './Icons';
 
 export default function NotificationModal({ isOpen, onClose, onNewOrderNotification }) {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_notifications');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all'); // all, order, alert, system
 

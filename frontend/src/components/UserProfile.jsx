@@ -32,9 +32,37 @@ export default function UserProfile({
   // Copia al portapapeles
   const [copied, setCopied] = useState(false);
 
-  // Preferencias simuladas
-  const [orderConfirmation, setOrderConfirmation] = useState(true);
-  const [priceAlerts, setPriceAlerts] = useState(true);
+  // Preferencias con persistencia en localStorage
+  const [orderConfirmation, setOrderConfirmationState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_pref_order_confirm');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [priceAlerts, setPriceAlertsState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_pref_price_alerts');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const setOrderConfirmation = (val) => {
+    setOrderConfirmationState(val);
+    try {
+      localStorage.setItem('cryptopulse_pref_order_confirm', JSON.stringify(val));
+    } catch {}
+  };
+
+  const setPriceAlerts = (val) => {
+    setPriceAlertsState(val);
+    try {
+      localStorage.setItem('cryptopulse_pref_price_alerts', JSON.stringify(val));
+    } catch {}
+  };
 
   const walletAddr = wallet?.wallet_address || user?.wallet_address || 'Asignada y Protegida';
   const rawBalance = wallet?.fiat_balance != null ? wallet.fiat_balance : 10000;

@@ -200,6 +200,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('cryptopulse_token');
     localStorage.removeItem('cryptopulse_user');
     localStorage.removeItem('cryptopulse_wallet');
+    localStorage.removeItem('cryptopulse_cached_orders');
+    localStorage.removeItem('cryptopulse_portfolio_subtab');
   };
 
   return (

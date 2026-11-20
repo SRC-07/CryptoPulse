@@ -2,9 +2,40 @@ import React, { useState, useMemo } from 'react';
 import { SwapIcon } from './Icons';
 
 export default function CurrencyConverter({ cryptos = [], forexRates = {}, forexBase = 'USD' }) {
-  const [amount, setAmount] = useState('1');
-  const [fromCurrency, setFromCurrency] = useState('BTC');
-  const [toCurrency, setToCurrency] = useState('COP');
+  const [amount, setAmountState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_conv_amount') || '1';
+    } catch {
+      return '1';
+    }
+  });
+  const [fromCurrency, setFromCurrencyState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_conv_from') || 'BTC';
+    } catch {
+      return 'BTC';
+    }
+  });
+  const [toCurrency, setToCurrencyState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_conv_to') || 'COP';
+    } catch {
+      return 'COP';
+    }
+  });
+
+  const setAmount = (val) => {
+    setAmountState(val);
+    try { localStorage.setItem('cryptopulse_conv_amount', val); } catch {}
+  };
+  const setFromCurrency = (val) => {
+    setFromCurrencyState(val);
+    try { localStorage.setItem('cryptopulse_conv_from', val); } catch {}
+  };
+  const setToCurrency = (val) => {
+    setToCurrencyState(val);
+    try { localStorage.setItem('cryptopulse_conv_to', val); } catch {}
+  };
 
   const cryptoPricesInUSD = useMemo(() => {
     const map = {};

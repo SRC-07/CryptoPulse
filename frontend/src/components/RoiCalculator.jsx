@@ -1,11 +1,52 @@
 import React, { useState, useMemo } from 'react';
 
 export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurrency = 'COP' }) {
-  const [initialAmount, setInitialAmount] = useState('1000');
+  const [initialAmount, setInitialAmountState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_roi_initial') || '1000';
+    } catch {
+      return '1000';
+    }
+  });
   const [selectedCoin, setSelectedCoin] = useState('BTC');
-  const [annualRate, setAnnualRate] = useState('12');
-  const [years, setYears] = useState('1');
-  const [compoundFrequency, setCompoundFrequency] = useState('12');
+  const [annualRate, setAnnualRateState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_roi_rate') || '12';
+    } catch {
+      return '12';
+    }
+  });
+  const [years, setYearsState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_roi_years') || '1';
+    } catch {
+      return '1';
+    }
+  });
+  const [compoundFrequency, setCompoundFrequencyState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_roi_freq') || '12';
+    } catch {
+      return '12';
+    }
+  });
+
+  const setInitialAmount = (val) => {
+    setInitialAmountState(val);
+    try { localStorage.setItem('cryptopulse_roi_initial', val); } catch {}
+  };
+  const setAnnualRate = (val) => {
+    setAnnualRateState(val);
+    try { localStorage.setItem('cryptopulse_roi_rate', val); } catch {}
+  };
+  const setYears = (val) => {
+    setYearsState(val);
+    try { localStorage.setItem('cryptopulse_roi_years', val); } catch {}
+  };
+  const setCompoundFrequency = (val) => {
+    setCompoundFrequencyState(val);
+    try { localStorage.setItem('cryptopulse_roi_freq', val); } catch {}
+  };
 
   const calculation = useMemo(() => {
     const P = parseFloat(initialAmount);
@@ -28,9 +69,13 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
 
   const formatMoney = (valUSD) => {
     if (valUSD == null) return '--';
-    const converted = valUSD * (fiatCurrency === 'COP' ? fiatRate : 1);
+    const rate = fiatCurrency === 'USD' ? 1 : (fiatRate || 1);
+    const converted = valUSD * rate;
     if (fiatCurrency === 'COP') {
       return `$${converted.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP`;
+    }
+    if (fiatCurrency === 'EUR') {
+      return `€${converted.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
     }
     return `$${valUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
   };
@@ -164,9 +209,11 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
                 >
                   {calculation ? formatMoney(calculation.futureValueUSD) : '--'}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-                  (${calculation ? calculation.futureValueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'} USD)
-                </div>
+                {fiatCurrency !== 'USD' && (
+                  <div style={{ fontSize: '12px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                    (${calculation ? calculation.futureValueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--'} USD ref.)
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px' }}>

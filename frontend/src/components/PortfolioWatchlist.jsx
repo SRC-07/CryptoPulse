@@ -16,6 +16,7 @@ export default function PortfolioWatchlist({
   fiatCurrency = 'USD',
   onOpenAuth,
   initialCoin = null,
+  onClearInitialCoin,
 }) {
   const { user, token, wallet, walletLoading, walletError, refreshWallet, isAuthenticated } = useAuth();
 
@@ -26,17 +27,46 @@ export default function PortfolioWatchlist({
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderFeedback, setOrderFeedback] = useState(null); // { type: 'success' | 'error', message: '' }
 
-  // Historial de órdenes de simulación
-  const [orders, setOrders] = useState([]);
+  // Historial de órdenes de simulación con caché local instantáneo (cero parpadeo)
+  const [orders, setOrders] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cryptopulse_cached_orders');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('positions'); // 'positions' | 'simulate' | 'history'
+
+  // Subpestaña activa con persistencia local
+  const [activeTab, setActiveTabState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_portfolio_subtab');
+      if (saved === 'positions' || saved === 'simulate' || saved === 'history') {
+        return saved;
+      }
+      return 'positions';
+    } catch {
+      return 'positions';
+    }
+  });
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('cryptopulse_portfolio_subtab', tab);
+    } catch {}
+  };
 
   useEffect(() => {
     if (initialCoin) {
       setSelectedCoin(initialCoin);
       setActiveTab('simulate');
+      if (onClearInitialCoin) {
+        onClearInitialCoin();
+      }
     }
-  }, [initialCoin]);
+  }, [initialCoin, onClearInitialCoin]);
 
   // Mapa rápido de criptomonedas para búsqueda O(1) de precio y metadatos
   const cryptoMap = React.useMemo(() => {
@@ -64,6 +94,9 @@ export default function PortfolioWatchlist({
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
+        try {
+          localStorage.setItem('cryptopulse_cached_orders', JSON.stringify(data));
+        } catch {}
       }
     } catch {
       // Manejo silencioso de red

@@ -13,9 +13,48 @@ export default function CryptoMarket({
   onOpenSimulate,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [sortBy, setSortBy] = useState('market_cap');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterType, setFilterTypeState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_market_filter') || 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const [sortBy, setSortByState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_market_sort_by') || 'market_cap';
+    } catch {
+      return 'market_cap';
+    }
+  });
+  const [sortOrder, setSortOrderState] = useState(() => {
+    try {
+      return localStorage.getItem('cryptopulse_market_sort_order') || 'desc';
+    } catch {
+      return 'desc';
+    }
+  });
+
+  const setFilterType = (val) => {
+    setFilterTypeState(val);
+    try {
+      localStorage.setItem('cryptopulse_market_filter', val);
+    } catch {}
+  };
+
+  const setSortBy = (val) => {
+    setSortByState(val);
+    try {
+      localStorage.setItem('cryptopulse_market_sort_by', val);
+    } catch {}
+  };
+
+  const setSortOrder = (val) => {
+    setSortOrderState(val);
+    try {
+      localStorage.setItem('cryptopulse_market_sort_order', val);
+    } catch {}
+  };
   const [selectedCoin, setSelectedCoin] = useState(null);
   const [alertPrice, setAlertPrice] = useState('');
   const [alertSuccess, setAlertSuccess] = useState(null);
@@ -275,7 +314,7 @@ export default function CryptoMarket({
                     onClick={() => toggleSort('price')}
                     title="Ordenar por precio"
                   >
-                    Precio (USD) {sortBy === 'price' ? (sortOrder === 'desc' ? '▼' : '▲') : ''}
+                    Precio ({fiatCurrency}) {sortBy === 'price' ? (sortOrder === 'desc' ? '▼' : '▲') : ''}
                   </th>
                   <th
                     className="sortable"
