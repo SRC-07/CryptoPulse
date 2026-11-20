@@ -128,8 +128,23 @@ Accesibles a través del Load Balancer en `http://localhost:8080`:
 ### 4. Alertas y Notificaciones (Notification Worker — Redis 7)
 | Método | Ruta | Descripción |
 |---|---|---|
-| `POST` | `/api/notifications/events` | Encolado de eventos asíncronos en Redis 7 |
+| `GET` | `/api/notifications?limit=20` | Consulta de notificaciones y alertas encoladas para la campana del Navbar |
+| `POST` | `/api/notifications/events` | Encolado de eventos asíncronos en Redis 7 (órdenes y alertas) |
+| `POST` | `/api/notifications/test` | Disparador de notificaciones de prueba para demostraciones en vivo |
+| `DELETE`| `/api/notifications` | Limpieza del buffer de notificaciones |
 | `GET` | `/api/notifications/health` | Estado del worker y latencia con Redis |
+
+---
+
+## Orquestación del Clúster (Entrega Final)
+
+El proyecto soporta **dos modalidades de orquestación industrial**:
+
+1. **Docker Compose de Alta Disponibilidad (HA):**
+   - Ejecución guiada mediante el script PowerShell: `.\orchestrate.ps1 up` (iniciar), `.\orchestrate.ps1 health` (diagnóstico) y `.\orchestrate.ps1 test` (pruebas).
+2. **Kubernetes Nativo (`k8s/`):**
+   - Manifiestos organizados en `k8s/` (`Namespace`, `ConfigMap`, `Secrets`, `PVC`, `Deployments` autoescalables, `Services`, `Ingress` y `HPA`).
+   - Para consultar el diagrama y arquitectura detallada, ver: **[docs/ORQUESTACION.md](docs/ORQUESTACION.md)**.
 
 ---
 

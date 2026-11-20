@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { BellIcon } from './Icons';
 
 export default function Navbar({
   activeTab,
@@ -8,6 +9,8 @@ export default function Navbar({
   onCurrencyChange,
   onOpenStatus,
   onOpenAuth,
+  onOpenNotifications,
+  unreadNotifCount = 0,
 }) {
   const { user, logout } = useAuth();
 
@@ -98,6 +101,76 @@ export default function Navbar({
           <option value="ES">ES</option>
           <option value="EN">EN</option>
         </select>
+
+        {/* Botón de Diagnóstico de Disponibilidad en Tiempo Real (ISO 9126: Confiabilidad) */}
+        <button
+          onClick={onOpenStatus}
+          className="btn-ghost"
+          style={{
+            padding: '5px 9px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: 'var(--color-mist)',
+            border: '1px solid var(--color-graphite)',
+            borderRadius: 'var(--radius-sm)'
+          }}
+          title="Ver estado de salud y latencia del clúster"
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: '#27a644',
+            display: 'inline-block',
+            boxShadow: '0 0 6px #27a644'
+          }} />
+          <span style={{ display: 'inline' }}>Sistema</span>
+        </button>
+
+        {/* Botón Campana de Notificaciones & Alertas (Entrega Final) */}
+        <button
+          onClick={onOpenNotifications}
+          className="btn-ghost"
+          style={{
+            position: 'relative',
+            padding: '6px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: unreadNotifCount > 0 ? 'var(--color-paper)' : 'var(--color-mist)',
+            border: '1px solid var(--color-graphite)',
+            borderRadius: 'var(--radius-sm)',
+            cursor: 'pointer'
+          }}
+          title="Centro de notificaciones y alertas"
+          aria-label="Notificaciones"
+        >
+          <BellIcon size={16} />
+          {unreadNotifCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-4px',
+              backgroundColor: 'var(--color-acid-lime)',
+              color: '#08090a',
+              fontSize: '10px',
+              fontWeight: 700,
+              minWidth: '16px',
+              height: '16px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 3px',
+              fontFamily: 'var(--font-mono)',
+              boxShadow: '0 0 8px rgba(228, 242, 34, 0.6)'
+            }}>
+              {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+            </span>
+          )}
+        </button>
 
         {/* Estado de Autenticación */}
         {user ? (

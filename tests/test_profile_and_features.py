@@ -1,11 +1,18 @@
 import httpx
 import time
+import pytest
 
 BASE_URL = "http://localhost:8080/api"
 
 def test_full_features():
     print("=== PROBANDO NUEVAS CARACTERÍSTICAS ===")
     client = httpx.Client(timeout=10.0)
+
+    # 0. Verificación previa de conectividad con el clúster
+    try:
+        ping = client.get(f"{BASE_URL}/health", timeout=2.0)
+    except (httpx.ConnectError, httpx.TimeoutException):
+        pytest.skip("Prueba de integración E2E omitida: El clúster Docker/K8s no está en ejecución en http://localhost:8080")
 
     # 1. Probar obtención de catálogo ampliado de criptos (30+)
     res = client.get(f"{BASE_URL}/crypto/prices?vs_currency=usd&per_page=50")

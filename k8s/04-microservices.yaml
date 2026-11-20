@@ -1,0 +1,174 @@
+# ==========================================
+# Clúster Market Service (E1) — 2 Réplicas
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-service
+  namespace: cryptopulse
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: market-service
+  template:
+    metadata:
+      labels:
+        app: market-service
+    spec:
+      containers:
+        - name: market-service
+          image: cryptopulse/market-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: cryptopulse-config
+            - secretRef:
+                name: cryptopulse-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 384Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: market-service
+  namespace: cryptopulse
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: market-service
+---
+# ==========================================
+# Clúster Portfolio & Auth Service (E2) — 2 Réplicas
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio-service
+  namespace: cryptopulse
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: portfolio-service
+  template:
+    metadata:
+      labels:
+        app: portfolio-service
+    spec:
+      containers:
+        - name: portfolio-service
+          image: cryptopulse/portfolio-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: cryptopulse-config
+            - secretRef:
+                name: cryptopulse-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 384Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portfolio-service
+  namespace: cryptopulse
+spec:
+  ports:
+    - port: 8001
+      targetPort: 8001
+  selector:
+    app: portfolio-service
+---
+# ==========================================
+# Notification Worker (E3)
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-worker
+  namespace: cryptopulse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-worker
+  template:
+    metadata:
+      labels:
+        app: notification-worker
+    spec:
+      containers:
+        - name: notification-worker
+          image: cryptopulse/notification-worker:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef:
+                name: cryptopulse-config
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-worker
+  namespace: cryptopulse
+spec:
+  ports:
+    - port: 8002
+      targetPort: 8002
+  selector:
+    app: notification-worker

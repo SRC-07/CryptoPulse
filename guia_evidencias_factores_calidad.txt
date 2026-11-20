@@ -1,0 +1,177 @@
+================================================================================
+  CRYPTOPULSE - GUÍA DE EVIDENCIAS Y PRUEBAS POR FACTOR DE CALIDAD (ISO 9126)
+  Taller: "Evaluando la Calidad del Software con ISO 9126" - Minuto de Dios
+================================================================================
+Este documento detalla exactamente DÓNDE VER (en la página web / interfaz gráfica)
+y CÓMO PROBAR (comandos en terminal) cada uno de los 5 factores de calidad 
+definidos en la tabla del taller.
+
+================================================================================
+1. FACTOR: USABILIDAD
+================================================================================
+Pregunta guía: ¿Qué tan intuitiva, comprensible y clara es la interfaz para que
+el usuario monitoree mercados financieros y realice cálculos sin fricción?
+
+DÓNDE VERLO EN LA PÁGINA (INTERFAZ WEB):
+----------------------------------------
+Abra en el navegador: http://localhost:5173 (o http://localhost:8080)
+1. Barras de cotización rápida:
+   - Cinta superior (TickerBar) con movimiento continuo de precios, variación
+     porcentual en 24h y minigráficos dinámicos.
+2. Pestaña "Mercados" (CryptoMarket):
+   - Tabla interactiva con minigráficos de tendencia (Sparklines), buscador en 
+     tiempo real y selector de divisas (USD / COP / EUR).
+3. Pestaña "Conversor" (CurrencyConverter):
+   - Permite convertir instantáneamente entre criptomonedas y divisas fiat.
+4. Pestaña "Calculadora ROI" (RoiCalculator):
+   - Estimación de rendimiento histórico y proyecciones de retorno de inversión.
+5. Pestaña "Tasas" (ForexRates):
+   - Cotizaciones de monedas fiat (COP, EUR, GBP, JPY, etc.) con base dinámica.
+6. Pestaña "Mi Cartera" (PortfolioWatchlist) y "Perfil" (UserProfile):
+   - Gestión de saldo simulado ($10,000 USD), compra/venta inmediata y 
+     persistencia de preferencias (moneda, idioma ES/EN, temas).
+
+CÓMO PROBARLO CON COMANDOS:
+---------------------------
+# Ejecutar prueba integral del flujo de usuario (Registro, Billetera 1:1, Trading y Cartera):
+python tests/integration_linear_test.py
+
+# Ejecutar validación de perfil, actualización de preferencias y catálogo extendido (+30 criptos):
+python tests/test_profile_and_features.py
+
+
+================================================================================
+2. FACTOR: CONFIABILIDAD
+================================================================================
+Pregunta guía: ¿El sistema es capaz de mantener su disponibilidad, tolerar fallos
+en los servicios externos y notificar oportunamente el estado de sus componentes?
+
+DÓNDE VERLO EN LA PÁGINA (INTERFAZ WEB):
+----------------------------------------
+1. Botón "Sistema" con LED de estado en la barra de navegación:
+   - En la esquina superior derecha de la barra superior, haga clic en el botón 
+     "Sistema" (con indicador verde/rojo).
+   - Se abrirá la ventana modal "Estado Operativo de la Plataforma".
+   - Muestra en tiempo real la disponibilidad y latencia (ms) de:
+     * Servicio de Pasarela & Enrutamiento
+     * Motor de Cotizaciones & Órdenes (Market Service)
+     * Base de Datos & Transacciones (PostgreSQL)
+     * Feed de Mercados Cripto Global (CoinGecko)
+     * Feed de Tipos de Cambio Forex (Frankfurter)
+   - Dispone del botón "Ejecutar Diagnóstico" para refrescar el estado al instante.
+
+CÓMO PROBARLO CON COMANDOS:
+---------------------------
+A. Consulta directa al Enrutador de Salud (Health Checks):
+   curl -s http://localhost:8080/api/health/full | jq .
+   # (En PowerShell):
+   Invoke-RestMethod http://localhost:8080/api/health/full | Format-List
+
+B. Suite de Pruebas Automatizadas de Circuit Breaker (ISO 9126):
+   pytest tests/test_circuit_breaker.py -v
+   # Valida: CLOSED -> OPEN tras 3 fallos -> HALF_OPEN de prueba -> CLOSED
+
+C. Prueba de Fallback a Datos Locales de MongoDB (Chaos Testing):
+   # Ejecutar 4 peticiones continuas simulando caída externa:
+   1..4 | ForEach-Object {
+       $res = Invoke-RestMethod "http://localhost:8080/api/crypto/prices?vs_currency=usd&per_page=5"
+       [PSCustomObject]@{ Intento = $_; Estado = $res.status; Origen = $res.source }
+   }
+   # Observará que el origen conmuta a "mongodb-circuit-fallback", entregando
+   # los últimos datos válidos sin interrumpir el servicio ni arrojar error 500.
+
+
+================================================================================
+3. FACTOR: EFICIENCIA
+================================================================================
+Pregunta guía: ¿Cómo optimiza la plataforma los tiempos de respuesta y el uso de
+recursos ante consultas recurrentes de cotizaciones de criptomonedas y divisas?
+
+DÓNDE VERLO EN LA PÁGINA (INTERFAZ WEB):
+----------------------------------------
+1. Inspección de red (F12 en Chrome/Firefox -> Pestaña Network):
+   - Al navegar o refrescar la lista de criptos, las respuestas se obtienen en 
+     menos de 5 ms gracias a la capa de caché distribuida en Redis 7.
+2. Carga ultraligera de la aplicación:
+   - El frontend fue compilado y empaquetado con Vite, entregando assets 
+     minificados y servidos a través de Nginx con compresión gzip.
+
+CÓMO PROBARLO CON COMANDOS:
+---------------------------
+A. Comprobación del Algoritmo de Balanceo de Carga (least_conn):
+   pytest tests/test_load_balancing_config.py -v
+   # Verifica la distribución eficiente entre réplicas del Market Service (M1 y M2).
+
+B. Verificación de Caché L1 en Redis 7 (Respuestas < 5ms):
+   # Primera llamada (consulta o refresco):
+   curl -s "http://localhost:8080/api/crypto/prices?vs_currency=usd&per_page=10" | jq .source
+   # Respuestas subsiguientes mostrarán: "source": "redis-cache-l1"
+
+C. Medición de tiempos de respuesta:
+   # En PowerShell:
+   Measure-Command { Invoke-RestMethod "http://localhost:8080/api/crypto/prices?vs_currency=usd&per_page=10" }
+
+
+================================================================================
+4. FACTOR: SEGURIDAD
+================================================================================
+Pregunta guía: ¿De qué manera se protegen las configuraciones sensibles, la
+integridad de las peticiones y el acceso a los servicios internos del sistema?
+
+DÓNDE VERLO EN LA PÁGINA (INTERFAZ WEB):
+----------------------------------------
+1. Modal de Autenticación ("Crear Cuenta" / "Iniciar Sesión"):
+   - Los datos viajan protegidos; las contraseñas se encriptan con bcrypt.
+2. Aislamiento estricto de usuario:
+   - Al iniciar sesión con un usuario, solo tiene acceso a su billetera y sus órdenes.
+   - Si se cierra sesión ("Salir") o se entra con otro usuario, las transacciones 
+     están completamente aisladas.
+3. Cabeceras HTTP de protección:
+   - En la consola del navegador (F12 -> Headers), Nginx inyecta cabeceras de
+     bloqueo de Clickjacking (`X-Frame-Options: DENY`), protección XSS y CSP.
+
+CÓMO PROBARLO CON COMANDOS:
+---------------------------
+A. Prueba Automatizada de Aislamiento 1:1 de Wallets y Usuarios:
+   pytest tests/test_user_isolation.py -v
+   # Valida que ninguna billetera puede ser compartida ni accedida por otro ID.
+
+B. Verificación de Bloqueo a Peticiones no Autenticadas (401 Unauthorized):
+   curl -i http://localhost:8080/api/wallet/my-wallet
+   # Retorna: HTTP/1.1 401 Unauthorized (requiere Bearer Token JWT).
+
+C. Comprobación de Cabeceras de Seguridad Nginx:
+   curl -I http://localhost:8080/api/health
+
+
+================================================================================
+5. FACTOR: MANTENIBILIDAD
+================================================================================
+Pregunta guía: ¿Qué tan sencillo resulta diagnosticar defectos, actualizar
+integraciones externas o escalar nuevas funcionalidades en el código fuente?
+
+DÓNDE VERLO EN EL PROYECTO:
+---------------------------
+1. Arquitectura modular limpia:
+   - Separación estricta de responsabilidades:
+     * `gateway/`: Configuración Nginx y enrutamiento inverso.
+     * `services/market-service/`: Módulos independientes para CoinGecko, 
+       Frankfurter, Circuit Breaker, MongoDB y PostgreSQL.
+     * `services/portfolio-service/`: Microservicio dedicado a usuarios y wallets.
+     * `frontend/`: Componentes modulares y reutilizables en React.
+2. Documentación técnica de arquitectura:
+   - Consulte el archivo `docs/ARQUITECTURA.md` y `DESIGN.md`.
+
+CÓMO PROBARLO CON COMANDOS:
+---------------------------
+A. Batería Completa de Pruebas Automatizadas del Sistema:
+   pytest tests/ -v --tb=short
+
+B. Ejecución de todas las suites de verificación:
+   pytest tests/test_circuit_breaker.py -v
+   pytest tests/test_load_balancing_config.py -v
+   pytest tests/test_user_isolation.py -v
+   pytest tests/test_simulations.py -v
+   python tests/integration_linear_test.py
+   python tests/test_profile_and_features.py
+================================================================================

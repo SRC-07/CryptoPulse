@@ -9,6 +9,8 @@ import PortfolioWatchlist from './components/PortfolioWatchlist';
 import RoiCalculator from './components/RoiCalculator';
 import UserProfile from './components/UserProfile';
 import AuthModal from './components/AuthModal';
+import SystemStatusModal from './components/SystemStatusModal';
+import NotificationModal from './components/NotificationModal';
 import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 
 const API_BASE = '/api';
@@ -80,6 +82,18 @@ function MainLayout() {
   }, [activeTab]);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cryptopulse_notifications');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.filter(n => !n.read).length;
+      }
+    } catch {}
+    return 2;
+  });
   const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
 
   // Datos de Criptomonedas (Market Service)
@@ -201,7 +215,10 @@ function MainLayout() {
         onTabChange={setActiveTab}
         currency={currency}
         onCurrencyChange={setCurrency}
+        onOpenStatus={() => setStatusModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
+        onOpenNotifications={() => setNotificationModalOpen(true)}
+        unreadNotifCount={unreadNotifCount}
       />
 
       {/* Cinta Ticker en Tiempo Real con Marquee Continuo y Conversión */}
@@ -219,7 +236,7 @@ function MainLayout() {
             {/* Hero Section Estilo Linear (Exclusivo de la Pestaña Mercados) */}
             <section className="hero-linear">
               <h1 className="hero__title">
-                La plataforma de inteligencia financiera y trading simulado
+                Inteligencia financiera y trading simulado
               </h1>
 
               <p className="hero__subtitle">
@@ -352,6 +369,21 @@ function MainLayout() {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+      />
+
+      {/* Modal de Diagnóstico de Disponibilidad en Tiempo Real (ISO 9126: Confiabilidad) */}
+      <SystemStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+      />
+
+      {/* Centro de Notificaciones & Alertas (Entrega Final) */}
+      <NotificationModal
+        isOpen={notificationModalOpen}
+        onClose={() => {
+          setNotificationModalOpen(false);
+          setUnreadNotifCount(0);
+        }}
       />
     </div>
   );
