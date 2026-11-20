@@ -1,6 +1,6 @@
 """
 Tests de Circuit Breaker y Alta Disponibilidad (ISO 9126: Fiabilidad)
-CryptoPulse - Segunda Entrega
+CryptoPulse
 
 Valida que:
 1. El Circuit Breaker inicia en estado CLOSED y permite llamadas externas.

@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # Clúster Market Service (E1) — 2 Réplicas
+  # Clúster Market Service — 2 Réplicas
   # ==========================================
   market-service-1:
     build:
@@ -101,7 +101,7 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # Clúster Portfolio & Auth (E2) — 2 Réplicas
+  # Clúster Portfolio & Auth — 2 Réplicas
   # ==========================================
   portfolio-service-1:
     build:
@@ -154,7 +154,7 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # Notification Worker (E3)
+  # Notification Worker
   # ==========================================
   notification-worker:
     build:

@@ -1,6 +1,6 @@
 """
 Tests de Aislamiento Estricto de Billeteras (1:1 por Usuario)
-CryptoPulse - Segunda Entrega (ISO 9126: Seguridad y Fiabilidad)
+CryptoPulse (ISO 9126: Seguridad y Fiabilidad)
 
 Valida que:
 1. Cada usuario registrado recibe una billetera exclusiva con $10,000 USD de saldo virtual.

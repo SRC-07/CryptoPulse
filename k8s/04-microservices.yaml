@@ -1,5 +1,5 @@
 # ==========================================
-# Clúster Market Service (E1) — 2 Réplicas
+# Clúster Market Service — 2 Réplicas
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
@@ -60,7 +60,7 @@ spec:
     app: market-service
 ---
 # ==========================================
-# Clúster Portfolio & Auth Service (E2) — 2 Réplicas
+# Clúster Portfolio & Auth Service — 2 Réplicas
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment
@@ -121,7 +121,7 @@ spec:
     app: portfolio-service
 ---
 # ==========================================
-# Notification Worker (E3)
+# Notification Worker
 # ==========================================
 apiVersion: apps/v1
 kind: Deployment

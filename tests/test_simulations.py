@@ -1,6 +1,6 @@
 """
 Tests de Simulaciones de Inversión y Consistencia ACID
-CryptoPulse - Segunda Entrega (ISO 9126: Fiabilidad y Eficiencia)
+CryptoPulse (ISO 9126: Fiabilidad y Eficiencia)
 
 Valida que:
 1. Las órdenes de COMPRA deducen el saldo fiat y crean/incrementan activos con precio promedio ponderado.

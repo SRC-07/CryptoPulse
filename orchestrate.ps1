@@ -1,6 +1,6 @@
-<#
+﻿<#
 .SYNOPSIS
-    CryptoPulse - Script de Orquestación y Control de Clúster (Entrega Final)
+    CryptoPulse - Script de Orquestación y Control de Clúster
 .DESCRIPTION
     Automatiza el ciclo de vida, despliegue, escalado, verificación de salud y 
     pruebas del clúster de microservicios con balanceo de carga y persistencia políglota.
@@ -14,11 +14,11 @@
 #>
 
 param (
-    [Parameter(Position=0)]
+    [Parameter(Position = 0)]
     [ValidateSet("up", "down", "restart", "status", "health", "test", "scale", "logs")]
     [string]$Action = "status",
 
-    [Parameter(Position=1)]
+    [Parameter(Position = 1)]
     [string]$Target = ""
 )
 
@@ -26,7 +26,7 @@ $ErrorActionPreference = "Continue"
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "   CRYPTOPULSE - ORQUESTADOR DE CLÚSTER (ENTREGA FINAL)         " -ForegroundColor Cyan
+Write-Host "   CRYPTOPULSE - ORQUESTADOR DE CLÚSTER                         " -ForegroundColor Cyan
 Write-Host "   Arquitectura de Microservicios, Resiliencia y Calidad ISO 9126" -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
@@ -76,7 +76,8 @@ switch ($Action) {
         if (Check-Docker) {
             Write-Host "Estado de contenedores en ejecución:" -ForegroundColor Cyan
             docker compose ps
-        } else {
+        }
+        else {
             Write-Host "No se puede consultar 'docker compose ps' porque Docker está detenido." -ForegroundColor Gray
         }
     }
@@ -93,7 +94,8 @@ switch ($Action) {
                 $color = $c.status -eq "healthy" ? "Green" : "Red"
                 Write-Host " - [$($c.status.ToUpper())] $($c.service) ($($c.response_time_ms) ms)" -ForegroundColor $color
             }
-        } catch {
+        }
+        catch {
             Write-Host "[ERROR] No se pudo conectar a http://localhost:8080/api/health/full." -ForegroundColor Red
             Write-Host "Asegúrate de haber iniciado el clúster con: .\orchestrate.ps1 up" -ForegroundColor Gray
         }
@@ -107,7 +109,8 @@ switch ($Action) {
     "logs" {
         if ($Target -ne "") {
             docker compose logs -f $Target
-        } else {
+        }
+        else {
             docker compose logs --tail=50 -f
         }
     }

@@ -104,11 +104,11 @@ async def simulate_investment_order(
     Ejecuta una simulación de compra o venta de criptomonedas:
     1. Determina el usuario (a partir del token JWT si está autenticado, o del payload).
     2. Bloquea la fila de la billetera con SELECT ... FOR UPDATE (garantía ACID contra condiciones de carrera).
-    3. Obtiene cotización en tiempo real vía REST desde Market Service (E1).
-    4. Valida saldo y posiciones en PostgreSQL (E2).
+    3. Obtiene cotización en tiempo real vía REST desde Market Service.
+    4. Valida saldo y posiciones en PostgreSQL.
     5. Actualiza balances fiat y cripto atómicamente.
     6. Registra orden inmutable en simulation_orders.
-    7. Emite evento asíncrono al Notification Worker (E3).
+    7. Emite evento asíncrono al Notification Worker.
     """
     target_user_id = current_user.id if current_user else request.user_id
     if not target_user_id:

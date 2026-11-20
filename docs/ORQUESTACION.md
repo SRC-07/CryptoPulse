@@ -1,6 +1,6 @@
-# Arquitectura de Orquestación y Alta Disponibilidad — CryptoPulse (Entrega Final)
+# Arquitectura de Orquestación y Alta Disponibilidad — CryptoPulse
 
-Este documento describe formalmente la **arquitectura de orquestación**, la topología de clúster elástico, las políticas de resiliencia y el ciclo de vida de los servicios de **CryptoPulse** para la Entrega Final, cumpliendo con los estándares de la norma **ISO 9126 / ISO 25010** y las directrices de UNIMINUTO.
+Este documento describe formalmente la **arquitectura de orquestación**, la topología de clúster elástico, las políticas de resiliencia y el ciclo de vida de los servicios de **CryptoPulse**, cumpliendo con los estándares de la norma **ISO 9126 / ISO 25010** y las directrices de UNIMINUTO.
 
 ---
 
@@ -19,11 +19,11 @@ graph TD
     CLIENT["💻<br/><b>Client / Investor</b><br/>(React 18 SPA)"]:::client
     ORCH["<b>CryptoPulse<br/>Order Orchestrator</b><br/>(API Gateway / Portfolio)"]:::orch
 
-    MS["<b>Market<br/>Service (E1)</b><br/>Precios & Circuit Breaker"]:::service
-    WS["<b>Wallet &amp; ACID<br/>Payment (E2)</b><br/>Aislamiento 1:1"]:::service
-    PS["<b>Portfolio &amp;<br/>Inventory (E2)</b><br/>Posiciones Cripto"]:::service
+    MS["<b>Market<br/>Service</b><br/>Precios & Circuit Breaker"]:::service
+    WS["<b>Wallet &amp; ACID<br/>Payment</b><br/>Aislamiento 1:1"]:::service
+    PS["<b>Portfolio &amp;<br/>Inventory</b><br/>Posiciones Cripto"]:::service
     OS["<b>Order Ledger<br/>&amp; Audit</b><br/>Persistencia Inmutable"]:::service
-    NS["<b>Notification<br/>Worker (E3)</b><br/>Redis Pub/Sub &amp; Campana"]:::service
+    NS["<b>Notification<br/>Worker</b><br/>Redis Pub/Sub &amp; Campana"]:::service
 
     %% Flujo Cliente <-> Orquestador
     CLIENT -->|"1: POST /simulate/order"| ORCH
@@ -66,18 +66,18 @@ graph TD
             HC["Probes de Salud Activos<br/>* Liveness (Auto-Restart en fallo)<br/>* Readiness (Drenado de tráfico)"]:::control
         end
 
-        subgraph ClusterMarket["Clúster Market Service (E1) — Autoescalado"]
+        subgraph ClusterMarket["Clúster Market Service — Autoescalado"]
             M1["Pod / Réplica: market-1 (:8000)<br/>FastAPI + Circuit Breaker"]:::service
             M2["Pod / Réplica: market-2 (:8000)<br/>FastAPI + Circuit Breaker"]:::service
             MN["Pod / Réplica N (Autoescalado)"]:::service
         end
 
-        subgraph ClusterPortfolio["Clúster Portfolio & Auth (E2) — Autoescalado"]
+        subgraph ClusterPortfolio["Clúster Portfolio & Auth — Autoescalado"]
             P1["Pod / Réplica: portfolio-1 (:8001)<br/>JWT HS256 + Bcrypt + ACID"]:::service
             P2["Pod / Réplica: portfolio-2 (:8001)<br/>JWT HS256 + Bcrypt + ACID"]:::service
         end
 
-        subgraph AsynchronousLayer["Capa de Eventos y Notificaciones (E3)"]
+        subgraph AsynchronousLayer["Capa de Eventos y Notificaciones"]
             NW["Notification Worker (:8002)<br/>Despacho a Campana de Navbar"]:::service
         end
 

@@ -1,6 +1,6 @@
 """
 Tests de Notificaciones y Eventos Asíncronos (ISO 9126: Confiabilidad y Usabilidad)
-CryptoPulse - Entrega Final
+CryptoPulse
 
 Valida que:
 1. El Notification Worker recibe y procesa eventos asíncronos de órdenes y alertas.

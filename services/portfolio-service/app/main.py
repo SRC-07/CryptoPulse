@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="CryptoPulse - Portfolio & Auth Service (E2)",
+    title="CryptoPulse - Portfolio & Auth Service",
     version="2.0.0",
     description="Servicio de autenticación JWT, billeteras personales aisladas y simulaciones de inversión.",
     docs_url="/api/docs",

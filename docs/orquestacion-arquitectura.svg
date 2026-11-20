@@ -101,36 +101,36 @@
   <!-- 5. CINCO CAJAS INFERIORES DE MICROSERVICIOS -->
   <!-- ========================================== -->
 
-  <!-- Caja 1: Market Service (E1) -->
+  <!-- Caja 1: Market Service -->
   <g transform="translate(40, 480)">
     <rect x="0" y="0" width="150" height="85" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" filter="url(#card-shadow)"/>
     <text x="75" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
       Market
     </text>
     <text x="75" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
-      Service (E1)
+      Service
     </text>
   </g>
 
-  <!-- Caja 2: Wallet & Payment Service (E2) -->
+  <!-- Caja 2: Wallet & Payment Service -->
   <g transform="translate(230, 480)">
     <rect x="0" y="0" width="150" height="85" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" filter="url(#card-shadow)"/>
     <text x="75" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
       Wallet &amp; ACID
     </text>
     <text x="75" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
-      Payment (E2)
+      Payment
     </text>
   </g>
 
-  <!-- Caja 3: Portfolio Asset Service (E2) -->
+  <!-- Caja 3: Portfolio Asset Service -->
   <g transform="translate(425, 480)">
     <rect x="0" y="0" width="150" height="85" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" filter="url(#card-shadow)"/>
     <text x="75" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
       Portfolio &amp;
     </text>
     <text x="75" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
-      Inventory (E2)
+      Inventory
     </text>
   </g>
 
@@ -145,14 +145,14 @@
     </text>
   </g>
 
-  <!-- Caja 5: Notification Service (E3) -->
+  <!-- Caja 5: Notification Service -->
   <g transform="translate(810, 480)">
     <rect x="0" y="0" width="150" height="85" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" filter="url(#card-shadow)"/>
     <text x="75" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
       Notification
     </text>
     <text x="75" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle">
-      Worker (E3)
+      Worker
     </text>
   </g>
 

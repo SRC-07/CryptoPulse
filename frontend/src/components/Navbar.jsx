@@ -101,7 +101,7 @@ export default function Navbar({
           <option value="EN">EN</option>
         </select>
 
-        {/* Botón Campana de Notificaciones & Alertas (Entrega Final) */}
+        {/* Botón Campana de Notificaciones & Alertas */}
         <button
           onClick={onOpenNotifications}
           className="btn-ghost"

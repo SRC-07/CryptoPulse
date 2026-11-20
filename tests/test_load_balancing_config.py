@@ -1,6 +1,6 @@
 """
 Tests de Balanceo de Cargas y Configuración de Infraestructura (ISO 9126: Eficiencia)
-CryptoPulse - Segunda Entrega
+CryptoPulse
 
 Valida que:
 1. El archivo gateway/nginx.conf tiene configurados los upstreams con algoritmo 'least_conn'.

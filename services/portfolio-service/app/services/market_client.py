@@ -10,7 +10,7 @@ settings = get_settings()
 
 async def get_realtime_crypto_price(symbol: str) -> Optional[float]:
     """
-    Comunica Portfolio Service (E2) con Market Service (E1) vía REST interna.
+    Comunica Portfolio Service con Market Service vía REST interna.
     Obtiene la cotización en vivo de una criptomoneda para ejecutar simulaciones de inversión.
     """
     url = f"{settings.INTERNAL_MARKET_SERVICE_URL}/api/crypto/prices?vs_currency=usd&per_page=50"
@@ -65,7 +65,7 @@ async def get_realtime_crypto_price(symbol: str) -> Optional[float]:
 
 async def emit_notification_event(event_type: str, payload: Dict[str, Any]):
     """
-    Comunica Portfolio Service (E2) con Notification Worker (E3) vía REST interna.
+    Comunica Portfolio Service con Notification Worker vía REST interna.
     Emite eventos para notificaciones o alertas en tiempo real (órdenes ejecutadas, balance bajo, etc.).
     """
     url = f"{settings.INTERNAL_NOTIFICATION_WORKER_URL}/api/notifications/events"

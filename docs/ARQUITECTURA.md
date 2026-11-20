@@ -1,16 +1,16 @@
-# Arquitectura del Sistema — CryptoPulse (Entrega 2)
+# Arquitectura del Sistema — CryptoPulse
 
 Este documento describe de manera exhaustiva la arquitectura técnica de microservicios, la topología de clúster con balanceo de carga, la persistencia políglota (*Database-per-Service*), los mecanismos de resiliencia y el aseguramiento de calidad según la norma **ISO 9126** implementados en **CryptoPulse**.
 
 ---
 
-## 1. Visión General del Sistema (Entrega 2)
+## 1. Visión General del Sistema
 
 **CryptoPulse** ha evolucionado hacia una plataforma financiera distribuida de alta disponibilidad con balanceo de carga perimetral, gestión de identidades segura, billeteras personales estrictamente aisladas (*1 usuario = 1 wallet privada*) y tolerancia a fallos mediante el patrón *Circuit Breaker*.
 
-![Arquitectura Oficial del Sistema CryptoPulse - Entrega 2](architecture-cryptopulse-entrega2.jpg)
+![Arquitectura Oficial del Sistema CryptoPulse](architecture-cryptopulse.jpg)
 
-### Principios de Diseño Arquitectónico (Entrega 2)
+### Principios de Diseño Arquitectónico
 
 1. **Balanceo de Carga y Clúster Multi-Instancia (Eficiencia):**
    - El API Gateway (Nginx 1.27) actúa como un balanceador de carga de Capa 7 (*Application Load Balancer*) distribuyendo el tráfico entre múltiples réplicas de los microservicios usando el algoritmo **`least_conn`** (asigna la solicitud a la instancia con menos conexiones concurrentes activas).
@@ -28,9 +28,9 @@ Este documento describe de manera exhaustiva la arquitectura técnica de microse
    - **Patrón Cortacircuitos (*Circuit Breaker*):** Si CoinGecko o Frankfurter presentan 3 fallos consecutivos o latencias mayores a 10s, el circuito conmuta a estado `OPEN` y abastece automáticamente las cotizaciones más recientes almacenadas en **MongoDB 7**, garantizando una experiencia ininterrumpida al usuario.
 
 4. **Patrón *Database-per-Service* Consolidado:**
-   - **Db1: MongoDB 7 (Documental - E1):** Ingesta masiva y time-series de ticks y variaciones de precio de criptomonedas.
-   - **Db2: PostgreSQL 16 (Relacional - E2):** Usuarios, billeteras aisladas, activos en posesión y libro mayor inmutable de órdenes simuladas.
-   - **Db3: Redis 7 (In-Memory - E3):** Caché distribuido L1, colas FIFO (`LPUSH`) y canales Pub/Sub para alertas de mercado en tiempo real.
+   - **Db1: MongoDB 7 (Documental):** Ingesta masiva y time-series de ticks y variaciones de precio de criptomonedas.
+   - **Db2: PostgreSQL 16 (Relacional):** Usuarios, billeteras aisladas, activos en posesión y libro mayor inmutable de órdenes simuladas.
+   - **Db3: Redis 7 (In-Memory):** Caché distribuido L1, colas FIFO (`LPUSH`) y canales Pub/Sub para alertas de mercado en tiempo real.
 
 ---
 
@@ -53,24 +53,24 @@ graph TD
     end
 
     subgraph RedInterna["Red Privada Docker (cryptopulse-internal)"]
-        subgraph ClusterMarket["Clúster Market Service (E1)"]
+        subgraph ClusterMarket["Clúster Market Service"]
             M1["market-service-1 (:8000)"]:::service
             M2["market-service-2 (:8000)"]:::service
         end
 
-        subgraph ClusterPortfolio["Clúster Portfolio & Auth (E2)"]
+        subgraph ClusterPortfolio["Clúster Portfolio & Auth"]
             P1["portfolio-service-1 (:8001)<br/>JWT Auth + Bcrypt"]:::service
             P2["portfolio-service-2 (:8001)<br/>JWT Auth + Bcrypt"]:::service
         end
 
-        subgraph WorkerService["Asincronía (E3)"]
+        subgraph WorkerService["Asincronía"]
             NW["Notification Worker (:8002)<br/>Redis Streams / PubSub"]:::service
         end
 
         subgraph Almacenes["Domain Databases (Database-per-Service)"]
-            DB1[("Db1: MongoDB 7<br/>Documental - E1<br/>Histórico de Ticks Cripto")]:::db
-            DB2[("Db2: PostgreSQL 16<br/>Relacional - E2<br/>Usuarios, Wallets 1:1 y Ledger")]:::db
-            DB3[("Db3: Redis 7<br/>In-Memory - E3<br/>Caché Distribuido L1 + Colas")]:::db
+            DB1[("Db1: MongoDB 7<br/>Documental<br/>Histórico de Ticks Cripto")]:::db
+            DB2[("Db2: PostgreSQL 16<br/>Relacional<br/>Usuarios, Wallets 1:1 y Ledger")]:::db
+            DB3[("Db3: Redis 7<br/>In-Memory<br/>Caché Distribuido L1 + Colas")]:::db
         end
     end
 

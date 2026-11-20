@@ -58,14 +58,14 @@ async def lifespan(app: FastAPI):
     if client:
         try:
             await client.ping()
-            logger.info("Conectado exitosamente a Redis 7 (Db3: In-Memory - E3)")
+            logger.info("Conectado exitosamente a Redis 7 (Db3: In-Memory)")
         except Exception as e:
             logger.warning(f"Aviso de conexión a Redis: {e}")
     yield
 
 
 app = FastAPI(
-    title="CryptoPulse - Notification Worker (E3)",
+    title="CryptoPulse - Notification Worker",
     version="1.1.0",
     description="Worker asíncrono para colas de alertas de mercado y notificaciones de billetera respaldado por Redis 7.",
     lifespan=lifespan,
@@ -99,7 +99,7 @@ class TestNotificationRequest(BaseModel):
 @app.post("/api/notifications/events")
 async def receive_event(event_data: NotificationEvent):
     """
-    Recibe eventos asíncronos desde Market Service (E1) o Portfolio Service (E2)
+    Recibe eventos asíncronos desde Market Service o Portfolio Service
     y los encola en Redis 7 para despacho en tiempo real.
     """
     client = get_redis()
@@ -281,7 +281,7 @@ async def health_check():
         "status": "healthy",
         "database": {
             "name": "Redis 7",
-            "type": "In-Memory - E3",
+            "type": "In-Memory",
             "status": redis_status,
             "response_time_ms": latency_ms,
         },

@@ -1,4 +1,4 @@
-# CryptoPulse (Segunda Entrega)
+# CryptoPulse
 
 **Plataforma de inteligencia financiera, seguimiento de cotizaciones en tiempo real y prototipo de billetera (*wallet*) con simulación de inversiones**, construida con arquitectura modular de microservicios, clúster con balanceo de carga en Nginx (*least_conn*) y persistencia políglota (*Database-per-Service*).
 
@@ -6,38 +6,38 @@
 
 ---
 
-## Arquitectura del Sistema (Entrega 2)
+## Arquitectura del Sistema
 
-![Arquitectura del Sistema CryptoPulse - Entrega 2](docs/architecture-cryptopulse-entrega2.jpg)
+![Arquitectura del Sistema CryptoPulse](docs/architecture-cryptopulse.jpg)
 
 ```
 +-------------+     HTTP 8080     +----------------------+     +-------------------------------------------------------------+
 |             |  -------------->  |     API GATEWAY      |     |                   RED PRIVADA DOCKER                        |
 |   Frontend  |                   |   & LOAD BALANCER    |     |  +--------------------+  REST  +-------------------------+  |
-|  (React 18  |  <--------------  |       (Nginx)        |---->|  | CLÚSTER MARKET(E1) |<=====>| CLÚSTER PORTFOLIO(E2)    |  |
+|  (React 18  |  <--------------  |       (Nginx)        |---->|  |   CLÚSTER MARKET   |<=====>|    CLÚSTER PORTFOLIO    |  |
 |   + Vite)   |    Puerto 3000    | least_conn / DoS-Rate|     |  | (Réplicas M1, M2)  |        | (Réplicas P1, P2)        |  |
 |             |                   |     Puerto 8080      |     |  +---------+----------+        | * JWT Auth (Bcrypt)      |  |
 +-------------+                   +----------------------+     |            |                   | * Wallets 1:1 Aisladas   |  |
                                                                |            v (Ticks)           +------------+------------+  |
                                                                |  +--------------------+                     |               |
                                                                |  | Db1: MongoDB 7     |                     v (ACID Ledger) |
-                                                               |  | (Documental - E1)  |        +-------------------------+  |
+                                                               |  | (Documental)       |        +-------------------------+  |
                                                                |  +--------------------+        | Db2: PostgreSQL 16      |  |
-                                                               |            ^                   | (Relacional - E2)       |  |
+                                                               |            ^                   | (Relacional)            |  |
                                                                |            |   Caché L1 (TTL)  | * Wallets Privadas      |  |
                                                                |            +---------+         +-------------------------+  |
                                                                |                      |                      ^               |
                                                                |                      v                      |               |
                                                                |            +-------------------------+      | Eventos       |
                                                                |            | Db3: Redis 7            |      v               |
-                                                               |            | (In-Memory - E3)        |<-----+               |
+                                                               |            | (In-Memory)             |<-----+               |
                                                                |            | * Caché L1 (30s)        |                      |
                                                                |            | * Colas FIFO & PubSub   |                      |
                                                                |            +-------------------------+                      |
                                                                |                      ^                                      |
                                                                |                      |                                      |
                                                                |            +---------+---------------+                      |
-                                                               |            | Notification Worker(E3) |                      |
+                                                               |            | Notification Worker     |                      |
                                                                |            | (FastAPI / Redis)       |                      |
                                                                |            +-------------------------+                      |
                                                                +-------------------------------------+-----------------------+
@@ -49,18 +49,18 @@
                                                                                           +---------------------+
 ```
 
-### Componentes de la Plataforma (Entrega 2)
+### Componentes de la Plataforma
 
 | Componente | Rol / Responsabilidad | Tecnología | Puerto | Política de Escalado |
 |---|---|---|---|---|
 | **Frontend Web** | SPA con Auth, billetera privada, simulador y conversor | React 18 + Vite | 3000 (público) | 1 contenedor |
 | **API Gateway & Load Balancer** | Balanceo de carga `least_conn`, Rate Limiting DoS y proxy inverso | Nginx 1.27 Alpine | 8080 (público) | 1 balanceador perimetral |
-| **Market Service Clúster (E1)** | Ingesta de cotizaciones, Circuit Breaker y caché L1 | FastAPI (Python 3.12) | 8000 (privado) | 2 réplicas balanceadas (`M1`, `M2`) |
-| **Portfolio & Auth Clúster (E2)**| Usuarios, JWT, billeteras 1:1 aisladas y simulaciones | FastAPI (Python 3.12) | 8001 (privado) | 2 réplicas balanceadas (`P1`, `P2`) |
-| **Notification Worker (E3)**| Despacho asíncrono de alertas de volatilidad y órdenes | FastAPI + Redis Worker | 8002 (privado) | 1 worker asíncrono |
-| **Db1: MongoDB 7** | **Documental (E1):** Registros de cambios e histórico de precios | MongoDB 7.0 | 27017 (privado)| Aislado en red interna |
-| **Db2: PostgreSQL 16** | **Relacional (E2):** Usuarios, billeteras aisladas y libro mayor | PostgreSQL 16 Alpine | 5432 (privado) | Aislado en red interna |
-| **Db3: Redis 7** | **In-Memory (E3):** Caché distribuido L1 y colas de eventos | Redis 7 Alpine | 6379 (privado) | Aislado en red interna |
+| **Market Service Clúster** | Ingesta de cotizaciones, Circuit Breaker y caché L1 | FastAPI (Python 3.12) | 8000 (privado) | 2 réplicas balanceadas (`M1`, `M2`) |
+| **Portfolio & Auth Clúster**| Usuarios, JWT, billeteras 1:1 aisladas y simulaciones | FastAPI (Python 3.12) | 8001 (privado) | 2 réplicas balanceadas (`P1`, `P2`) |
+| **Notification Worker**| Despacho asíncrono de alertas de volatilidad y órdenes | FastAPI + Redis Worker | 8002 (privado) | 1 worker asíncrono |
+| **Db1: MongoDB 7** | **Documental:** Registros de cambios e histórico de precios | MongoDB 7.0 | 27017 (privado)| Aislado en red interna |
+| **Db2: PostgreSQL 16** | **Relacional:** Usuarios, billeteras aisladas y libro mayor | PostgreSQL 16 Alpine | 5432 (privado) | Aislado en red interna |
+| **Db3: Redis 7** | **In-Memory:** Caché distribuido L1 y colas de eventos | Redis 7 Alpine | 6379 (privado) | Aislado en red interna |
 
 ---
 
@@ -136,7 +136,7 @@ Accesibles a través del Load Balancer en `http://localhost:8080`:
 
 ---
 
-## Orquestación del Clúster (Entrega Final)
+## Orquestación del Clúster
 
 El proyecto soporta **dos modalidades de orquestación industrial**:
 
