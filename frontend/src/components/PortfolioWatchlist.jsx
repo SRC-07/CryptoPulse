@@ -162,12 +162,12 @@ export default function PortfolioWatchlist({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || 'Error al ejecutar orden de simulación.');
+        throw new Error(data.detail || 'Error al procesar la orden.');
       }
 
       setOrderFeedback({
         type: 'success',
-        message: data.message || `Orden de ${orderSide} por ${parsedQty} ${selectedCoin} ejecutada con éxito.`,
+        message: data.message || `Orden de ${orderSide === 'BUY' ? 'Compra' : 'Venta'} por ${parsedQty} ${selectedCoin} completada con éxito.`,
       });
 
       // Refrescar billetera e historial en vivo
@@ -247,12 +247,12 @@ export default function PortfolioWatchlist({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 510, color: 'var(--color-paper)', letterSpacing: '-0.022em' }}>
-            Billetera Personal y Simulador Transaccional
+            Billetera Personal y Operaciones Spot
           </h2>
           <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '4px' }}>
             {isAuthenticated
               ? `Billetera privada de trading de ${user?.username} con ejecución y balance en tiempo real.`
-              : 'Simula operaciones de compra/venta y gestiona activos cripto en tiempo real con fondos virtuales.'}
+              : 'Opera compra/venta y gestiona activos cripto en tiempo real con fondos disponibles.'}
           </p>
         </div>
 
@@ -360,7 +360,7 @@ export default function PortfolioWatchlist({
             {formatFiat(fiatBalance)}
           </div>
           <div className="wallet-banner__sub">
-            {fiatCurrency} Virtual para Simulación
+            {fiatCurrency} Disponible para Operar
           </div>
         </div>
 
@@ -403,7 +403,7 @@ export default function PortfolioWatchlist({
             className={`chip-pill ${activeTab === 'simulate' ? 'chip-pill--active' : ''}`}
             onClick={() => setActiveTab('simulate')}
           >
-            Simulador de Compra / Venta
+            Comprar / Vender
           </button>
           {isAuthenticated && (
             <button
@@ -422,7 +422,7 @@ export default function PortfolioWatchlist({
             style={{ fontSize: '12px', padding: '6px 14px' }}
           >
             <PlusIcon size={13} />
-            <span>Nueva Simulación</span>
+            <span>Nueva Orden</span>
           </button>
         )}
       </div>
@@ -438,7 +438,7 @@ export default function PortfolioWatchlist({
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 {isAuthenticated
                   ? 'Posiciones activas con cálculo de rentabilidad P&L en tiempo real.'
-                  : 'Modo demostración: Abre el simulador para realizar tus primeras operaciones.'}
+                  : 'Modo demostración: Comienza a operar para gestionar tu portafolio.'}
               </div>
             </div>
           </div>
@@ -450,14 +450,14 @@ export default function PortfolioWatchlist({
               </div>
               <p style={{ fontSize: '13px', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.6 }}>
                 {isAuthenticated
-                  ? `Tienes ${formatFiat(fiatBalance)} disponibles. Ejecuta una orden en el Simulador para adquirir tus primeras criptomonedas a precio de mercado en vivo.`
-                  : 'Inicia sesión para operar con tu saldo virtual de $10,000 USD o haz simulaciones en vivo.'}
+                  ? `Tienes ${formatFiat(fiatBalance)} disponibles. Ejecuta una orden de compra para adquirir tus primeras criptomonedas a precio de mercado en vivo.`
+                  : 'Inicia sesión para operar con tu saldo de $10,000 USD a cotizaciones en vivo.'}
               </p>
               <button
                 className="btn-lime"
                 onClick={() => setActiveTab('simulate')}
               >
-                Abrir Simulador de Inversión &rarr;
+                Comprar / Vender Activos &rarr;
               </button>
             </div>
           ) : (
@@ -558,7 +558,7 @@ export default function PortfolioWatchlist({
           <div className="table-card__toolbar">
             <div>
               <span style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)' }}>
-                Terminal de Simulación de Órdenes
+                Terminal de Órdenes Spot
               </span>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)', marginTop: '2px' }}>
                 Ejecuta compras y ventas a precios en tiempo real con actualización inmediata de saldos.
@@ -776,7 +776,7 @@ export default function PortfolioWatchlist({
                 No hay órdenes registradas
               </div>
               <div style={{ fontSize: '13px' }}>
-                Tus compras y ventas simuladas aparecerán aquí con su recibo de ejecución y sello temporal.
+                Tus compras y ventas aparecerán aquí con su recibo de ejecución y sello temporal.
               </div>
             </div>
           ) : (

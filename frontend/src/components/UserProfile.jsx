@@ -228,7 +228,7 @@ export default function UserProfile({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 510, color: 'var(--color-paper)' }}>
-              Billetera Privada & Capital Virtual
+              Billetera Privada & Capital
             </h3>
             <span style={{ fontSize: '12px', color: 'var(--color-fog)' }}>
               Identificador único de custodia y saldo disponible para operaciones en vivo.
@@ -443,7 +443,7 @@ export default function UserProfile({
                 Confirmación de Órdenes
               </div>
               <div style={{ fontSize: '12px', color: 'var(--color-fog)' }}>
-                Solicitar confirmación antes de ejecutar una compra o venta simulada
+                Solicitar confirmación antes de ejecutar una compra o venta
               </div>
             </div>
             <input

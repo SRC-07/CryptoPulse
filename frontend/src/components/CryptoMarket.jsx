@@ -622,7 +622,7 @@ export default function CryptoMarket({
                     onOpenSimulate(sym);
                   }}
                 >
-                  Simular Orden con {selectedCoin.symbol} &rarr;
+                  Operar con {selectedCoin.symbol} &rarr;
                 </button>
               )}
             </div>

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     CryptoPulse - Script de Orquestación y Control de Clúster
 .DESCRIPTION

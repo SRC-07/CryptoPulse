@@ -266,11 +266,11 @@ function MainLayout() {
             {/* Hero Section Estilo Linear (Exclusivo de la Pestaña Mercados) */}
             <section className="hero-linear">
               <h1 className="hero__title">
-                Inteligencia financiera y trading simulado
+                Inteligencia financiera y trading en tiempo real
               </h1>
 
               <p className="hero__subtitle">
-                Plataforma institucional de inteligencia de mercados, cotizaciones en tiempo real y ejecución simulada de órdenes sin riesgo financiero.
+                Plataforma institucional de inteligencia de mercados, cotizaciones en tiempo real y ejecución instantánea de órdenes spot.
               </p>
 
               <div className="hero__cta-group">

@@ -87,7 +87,7 @@ export default function RoiCalculator({ cryptos = [], fiatRate = 4120, fiatCurre
           Calculadora de Proyección y Rendimiento (ROI)
         </h2>
         <p style={{ color: 'var(--color-fog)', fontSize: '14px', marginTop: '6px' }}>
-          Simula el crecimiento potencial de un portafolio mediante interés compuesto en el tiempo.
+          Calcula el crecimiento proyectado de un portafolio mediante interés compuesto en el tiempo.
         </p>
       </div>
 

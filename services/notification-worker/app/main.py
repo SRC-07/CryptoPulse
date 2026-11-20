@@ -20,7 +20,7 @@ _in_memory_notifications: List[Dict[str, Any]] = [
         "id": "notif-welcome-001",
         "event": "SYSTEM_WELCOME",
         "title": "Bienvenido a CryptoPulse",
-        "message": "Tu billetera virtual institucional ha sido inicializada con $10,000 USD de saldo simulado.",
+        "message": "Tu billetera virtual institucional ha sido inicializada con $10,000 USD de saldo disponible.",
         "type": "system",
         "timestamp": time.time() - 300,
         "read": False,
@@ -214,7 +214,7 @@ async def trigger_test_notification(req: TestNotificationRequest):
     if req.type == "order":
         ev = NotificationEvent(
             event="ORDER_EXECUTED",
-            title=f"Orden {req.action} Simulada",
+            title=f"Orden {req.action} Ejecutada",
             message=f"Ejecutada compra/venta de {req.quantity} {req.symbol} a ${req.price:,.2f} USD.",
             type="order",
             payload={

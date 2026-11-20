@@ -45,7 +45,7 @@ export default function NotificationModal({ isOpen, onClose }) {
             id: 'notif-init-1',
             event: 'SYSTEM_WELCOME',
             title: 'Bienvenido a CryptoPulse',
-            message: 'Billetera institucional asignada con $10,000 USD simulados bajo aislamiento 1:1 en PostgreSQL 16.',
+            message: 'Billetera institucional asignada con $10,000 USD de saldo bajo aislamiento 1:1 en PostgreSQL 16.',
             type: 'system',
             timestamp: Date.now() / 1000 - 3600,
             read: false,

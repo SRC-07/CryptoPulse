@@ -209,9 +209,10 @@ async def simulate_investment_order(
     # Cargar respuesta actualizada
     updated_wallet = await _build_wallet_response(wallet, db)
 
+    action_label = "Compra" if order_type == "BUY" else "Venta"
     return SimulateOrderResult(
         status="success",
-        message=f"Simulación de {order_type} completada con éxito: {request.quantity} {symbol} a ${current_price:,.2f} USD",
+        message=f"Orden de {action_label} completada con éxito: {request.quantity} {symbol} a ${current_price:,.2f} USD",
         order=SimulationOrderResponse.model_validate(order),
         updated_wallet=updated_wallet,
     )
