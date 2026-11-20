@@ -16,14 +16,26 @@ export function AuthProvider({ children }) {
     return localStorage.getItem('cryptopulse_token') || null;
   });
 
-  const [wallet, setWallet] = useState(null);
-  const [walletLoading, setWalletLoading] = useState(false);
+  const [wallet, setWallet] = useState(() => {
+    try {
+      const savedWallet = localStorage.getItem('cryptopulse_wallet');
+      return savedWallet ? JSON.parse(savedWallet) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [walletLoading, setWalletLoading] = useState(() => {
+    const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('cryptopulse_token');
+    const hasCachedWallet = typeof window !== 'undefined' && !!localStorage.getItem('cryptopulse_wallet');
+    return hasToken && !hasCachedWallet;
+  });
   const [walletError, setWalletError] = useState(null);
 
   // Obtener la billetera personal del usuario autenticado
   const fetchMyWallet = useCallback(async (authToken = token) => {
     if (!authToken) {
       setWallet(null);
+      setWalletLoading(false);
       return;
     }
 
@@ -40,6 +52,9 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         const data = await res.json();
         setWallet(data);
+        try {
+          localStorage.setItem('cryptopulse_wallet', JSON.stringify(data));
+        } catch {}
       } else if (res.status === 401) {
         // Token expirado
         logout();
@@ -184,6 +199,7 @@ export function AuthProvider({ children }) {
     setWallet(null);
     localStorage.removeItem('cryptopulse_token');
     localStorage.removeItem('cryptopulse_user');
+    localStorage.removeItem('cryptopulse_wallet');
   };
 
   return (

@@ -185,6 +185,30 @@ export default function PortfolioWatchlist({
   const totalPnLUSD = totalCryptoValueUSD - totalInvestedUSD;
   const totalPnLPercent = totalInvestedUSD > 0 ? (totalPnLUSD / totalInvestedUSD) * 100 : 0;
 
+  // Estado de carga inicial limpio sin parpadeo si no hay caché de billetera
+  if (isAuthenticated && !wallet && walletLoading) {
+    return (
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
+        <div style={{
+          background: 'var(--color-carbon)',
+          border: '1px solid var(--color-smoke)',
+          borderRadius: 'var(--radius-cards)',
+          padding: '80px 24px',
+          textAlign: 'center',
+          color: 'var(--color-fog)'
+        }}>
+          <RefreshIcon size={24} className="loading-spin" style={{ margin: '0 auto 12px', display: 'block', color: 'var(--color-acid-lime)' }} />
+          <div style={{ fontSize: '15px', fontWeight: 510, color: 'var(--color-paper)' }}>
+            Sincronizando billetera privada...
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '4px' }}>
+            Consultando libro mayor institucional
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '40px' }}>
       {/* Cabecera Principal */}
