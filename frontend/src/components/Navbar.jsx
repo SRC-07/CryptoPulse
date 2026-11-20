@@ -102,33 +102,6 @@ export default function Navbar({
           <option value="EN">EN</option>
         </select>
 
-        {/* Botón de Diagnóstico de Disponibilidad en Tiempo Real (ISO 9126: Confiabilidad) */}
-        <button
-          onClick={onOpenStatus}
-          className="btn-ghost"
-          style={{
-            padding: '5px 9px',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: 'var(--color-mist)',
-            border: '1px solid var(--color-graphite)',
-            borderRadius: 'var(--radius-sm)'
-          }}
-          title="Ver estado de salud y latencia del clúster"
-        >
-          <span style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: '#27a644',
-            display: 'inline-block',
-            boxShadow: '0 0 6px #27a644'
-          }} />
-          <span style={{ display: 'inline' }}>Sistema</span>
-        </button>
-
         {/* Botón Campana de Notificaciones & Alertas (Entrega Final) */}
         <button
           onClick={onOpenNotifications}

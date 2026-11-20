@@ -175,7 +175,7 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 className="modal-title" style={{ fontSize: '18px', margin: 0 }}>
-                  Centro de Notificaciones & Alertas
+                  Notificaciones y alertas
                 </h3>
                 {unreadCount > 0 && (
                   <span style={{
@@ -191,9 +191,6 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: '12px', color: 'var(--color-fog)' }}>
-                Eventos asíncronos procesados por Redis 7 y Notification Worker (E3)
-              </span>
             </div>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Cerrar">
@@ -242,29 +239,13 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
 
           {/* Acciones */}
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={() => triggerTestAlert('order')}
-              className="btn-ghost"
-              style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--color-acid-lime)' }}
-              title="Disparar orden de prueba simulada"
-            >
-              + Simular Orden
-            </button>
-            <button
-              onClick={() => triggerTestAlert('alert')}
-              className="btn-ghost"
-              style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--color-signal-teal)' }}
-              title="Disparar alerta de volatilidad"
-            >
-              + Simular Alerta
-            </button>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 className="btn-ghost"
                 style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--color-mist)' }}
               >
-                Marcar leídas
+                Marcar como leído
               </button>
             )}
             {notifications.length > 0 && (
@@ -396,12 +377,11 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
           paddingTop: '12px',
           borderTop: '1px solid var(--color-graphite)',
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           alignItems: 'center',
           fontSize: '11px',
           color: 'var(--color-ash)'
         }}>
-          <span>Despacho asíncrono con Redis Pub/Sub</span>
           <button
             onClick={fetchNotifications}
             className="btn-ghost"
