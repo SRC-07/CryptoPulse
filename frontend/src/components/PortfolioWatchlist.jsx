@@ -19,12 +19,36 @@ export default function PortfolioWatchlist({
 }) {
   const { user, token, wallet, walletLoading, walletError, refreshWallet, isAuthenticated } = useAuth();
 
-  // Estado para la orden de simulación (Compra / Venta)
+  // Activos y posiciones en billetera
+  const portfolioAssets = wallet?.assets || [];
+  const sellableAssets = React.useMemo(() => {
+    return portfolioAssets.filter(a => (a.quantity || 0) > 0);
+  }, [portfolioAssets]);
+
+  // Estado para la orden de spot (Compra / Venta)
   const [orderSide, setOrderSide] = useState('BUY');
   const [selectedCoin, setSelectedCoin] = useState(initialCoin || 'BTC');
   const [orderQuantity, setOrderQuantity] = useState('0.1');
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderFeedback, setOrderFeedback] = useState(null); // { type: 'success' | 'error', message: '' }
+
+  // Activo vendible actualmente seleccionado
+  const currentSellAsset = React.useMemo(() => {
+    return sellableAssets.find(a => a.symbol.toUpperCase() === selectedCoin.toUpperCase());
+  }, [sellableAssets, selectedCoin]);
+
+  // Sincronizar activo seleccionado al cambiar a modo SELL o al actualizar posiciones
+  useEffect(() => {
+    if (orderSide === 'SELL' && isAuthenticated) {
+      if (sellableAssets.length > 0) {
+        const exists = sellableAssets.some(a => a.symbol.toUpperCase() === selectedCoin.toUpperCase());
+        if (!exists) {
+          setSelectedCoin(sellableAssets[0].symbol.toUpperCase());
+          setOrderQuantity(String(sellableAssets[0].quantity));
+        }
+      }
+    }
+  }, [orderSide, sellableAssets, selectedCoin, isAuthenticated]);
 
   // Historial de órdenes de simulación con caché local instantáneo (cero parpadeo)
   const [orders, setOrders] = useState(() => {
@@ -123,13 +147,16 @@ export default function PortfolioWatchlist({
     return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
   };
 
-  // Precio del activo seleccionado para simulación
-  const selectedCoinData = cryptoMap[selectedCoin] || cryptos[0] || { current_price: 0, symbol: 'BTC' };
+  // Precio del activo seleccionado para trading spot
+  const selectedCoinData = cryptoMap[selectedCoin]
+    || cryptos.find(c => c.symbol?.toUpperCase() === selectedCoin?.toUpperCase())
+    || (currentSellAsset ? { current_price: currentSellAsset.average_buy_price, symbol: currentSellAsset.symbol } : cryptos[0])
+    || { current_price: 0, symbol: 'BTC' };
   const currentPrice = selectedCoinData.current_price || 0;
   const parsedQty = parseFloat(orderQuantity) || 0;
   const estimatedOrderCostUSD = parsedQty * currentPrice;
 
-  // Ejecución de orden de simulación conectada con PostgreSQL 16
+  // Ejecución de orden conectada con PostgreSQL 16
   const handleExecuteOrder = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -140,6 +167,24 @@ export default function PortfolioWatchlist({
     if (parsedQty <= 0) {
       setOrderFeedback({ type: 'error', message: 'Ingresa una cantidad mayor a cero.' });
       return;
+    }
+
+    if (orderSide === 'SELL') {
+      if (sellableAssets.length === 0) {
+        setOrderFeedback({ type: 'error', message: 'No tienes activos en tu billetera para vender.' });
+        return;
+      }
+      if (!currentSellAsset) {
+        setOrderFeedback({ type: 'error', message: `No posees ${selectedCoin} en tu billetera para vender.` });
+        return;
+      }
+      if (parsedQty > currentSellAsset.quantity) {
+        setOrderFeedback({
+          type: 'error',
+          message: `Posición insuficiente: dispones de ${currentSellAsset.quantity} ${selectedCoin} e intentas vender ${parsedQty}.`
+        });
+        return;
+      }
     }
 
     setOrderSubmitting(true);
@@ -210,7 +255,6 @@ export default function PortfolioWatchlist({
 
   // Cálculo de totales si está autenticado
   const fiatBalance = wallet?.fiat_balance ?? 10000;
-  const portfolioAssets = wallet?.assets || [];
   const totalCryptoValueUSD = portfolioAssets.reduce((sum, a) => sum + (a.current_value_usd || 0), 0);
   const totalWalletValueUSD = wallet?.total_portfolio_value_usd ?? (fiatBalance + totalCryptoValueUSD);
   const totalInvestedUSD = portfolioAssets.reduce((sum, a) => sum + (a.quantity * (a.average_buy_price || 0)), 0);
@@ -585,7 +629,13 @@ export default function PortfolioWatchlist({
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '10px' }}>
               <button
                 type="button"
-                onClick={() => setOrderSide('BUY')}
+                onClick={() => {
+                  setOrderSide('BUY');
+                  setOrderFeedback(null);
+                  if (!selectedCoin || !cryptos.some(c => c.symbol.toUpperCase() === selectedCoin.toUpperCase())) {
+                    setSelectedCoin(cryptos[0]?.symbol?.toUpperCase() || 'BTC');
+                  }
+                }}
                 className={orderSide === 'BUY' ? 'btn-trade-buy' : 'btn-ghost'}
                 style={{
                   padding: '12px',
@@ -602,7 +652,19 @@ export default function PortfolioWatchlist({
 
               <button
                 type="button"
-                onClick={() => setOrderSide('SELL')}
+                onClick={() => {
+                  setOrderSide('SELL');
+                  setOrderFeedback(null);
+                  if (sellableAssets.length > 0) {
+                    const match = sellableAssets.find(a => a.symbol.toUpperCase() === selectedCoin.toUpperCase());
+                    if (match) {
+                      setOrderQuantity(String(match.quantity));
+                    } else {
+                      setSelectedCoin(sellableAssets[0].symbol.toUpperCase());
+                      setOrderQuantity(String(sellableAssets[0].quantity));
+                    }
+                  }
+                }}
                 className={orderSide === 'SELL' ? 'btn-trade-sell' : 'btn-ghost'}
                 style={{
                   padding: '12px',
@@ -620,32 +682,129 @@ export default function PortfolioWatchlist({
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
               <div className="simulate-input-group">
-                <label className="simulate-label">Seleccionar Activo Cripto</label>
-                <select
-                  className="simulate-input"
-                  value={selectedCoin}
-                  onChange={(e) => setSelectedCoin(e.target.value.toUpperCase())}
-                  style={{ cursor: 'pointer', background: 'var(--color-obsidian)', width: '100%', minWidth: 0, height: '46px' }}
-                >
-                  {cryptos.map(c => (
-                    <option key={c.symbol} value={c.symbol}>
-                      {c.name} ({c.symbol}) &bull; ${c.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="simulate-label" style={{ margin: 0 }}>
+                    {orderSide === 'BUY' ? 'Seleccionar Activo Cripto' : 'Activo en Cartera a Vender'}
+                  </label>
+                  {orderSide === 'SELL' && isAuthenticated && (
+                    <span style={{ fontSize: '11px', color: 'var(--color-fog)' }}>
+                      {sellableAssets.length} {sellableAssets.length === 1 ? 'disponible' : 'disponibles'}
+                    </span>
+                  )}
+                </div>
+
+                {orderSide === 'SELL' && isAuthenticated && sellableAssets.length === 0 ? (
+                  <div
+                    style={{
+                      height: '46px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0 12px',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-obsidian)',
+                      border: '1px solid var(--color-graphite)',
+                      color: 'var(--color-fog)',
+                      fontSize: '12px',
+                    }}
+                  >
+                    <span>Sin activos en billetera</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrderSide('BUY');
+                        setOrderFeedback(null);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-pulse-green)',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: 510,
+                        textDecoration: 'underline',
+                        padding: 0,
+                      }}
+                    >
+                      Comprar &rarr;
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className="simulate-input"
+                    value={selectedCoin}
+                    onChange={(e) => {
+                      const newSym = e.target.value.toUpperCase();
+                      setSelectedCoin(newSym);
+                      if (orderSide === 'SELL') {
+                        const matching = sellableAssets.find(a => a.symbol.toUpperCase() === newSym);
+                        if (matching) {
+                          setOrderQuantity(String(matching.quantity));
+                        }
+                      }
+                    }}
+                    style={{ cursor: 'pointer', background: 'var(--color-obsidian)', width: '100%', minWidth: 0, height: '46px' }}
+                  >
+                    {orderSide === 'BUY'
+                      ? cryptos.map(c => (
+                          <option key={c.symbol} value={c.symbol}>
+                            {c.name} ({c.symbol}) &bull; ${c.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </option>
+                        ))
+                      : !isAuthenticated
+                      ? (
+                          <option value="" disabled>
+                            Inicia sesión para ver tus activos
+                          </option>
+                        )
+                      : sellableAssets.map(a => {
+                          const meta = cryptoMap[a.symbol.toUpperCase()];
+                          const price = meta?.current_price || a.average_buy_price || 0;
+                          const name = a.coin_name || meta?.name || a.symbol;
+                          return (
+                            <option key={a.symbol} value={a.symbol}>
+                              {name} ({a.symbol}) &bull; Tienes: {a.quantity} &bull; ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </option>
+                          );
+                        })}
+                  </select>
+                )}
               </div>
 
               <div className="simulate-input-group">
-                <label className="simulate-label">Cantidad a Operar</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="simulate-label" style={{ margin: 0 }}>Cantidad a Operar</label>
+                  {orderSide === 'SELL' && currentSellAsset && (
+                    <button
+                      type="button"
+                      onClick={() => setOrderQuantity(String(currentSellAsset.quantity))}
+                      className="text-mono"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-pulse-green)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: 0,
+                      }}
+                      title="Establecer cantidad máxima disponible"
+                    >
+                      Máx: {currentSellAsset.quantity} (100%)
+                    </button>
+                  )}
+                </div>
                 <input
                   type="number"
                   step="any"
                   min="0.000001"
+                  max={orderSide === 'SELL' && currentSellAsset ? currentSellAsset.quantity : undefined}
                   className="simulate-input"
                   value={orderQuantity}
                   onChange={(e) => setOrderQuantity(e.target.value)}
-                  placeholder="ej: 0.25"
+                  placeholder={orderSide === 'SELL' && currentSellAsset ? `Máx: ${currentSellAsset.quantity}` : 'ej: 0.25'}
                   required
+                  disabled={orderSide === 'SELL' && isAuthenticated && sellableAssets.length === 0}
                   style={{ width: '100%', minWidth: 0, height: '46px' }}
                 />
               </div>
@@ -727,20 +886,31 @@ export default function PortfolioWatchlist({
             {/* Botón de Ejecución de la Orden */}
             <button
               type="submit"
-              disabled={orderSubmitting || parsedQty <= 0}
+              disabled={
+                orderSubmitting ||
+                parsedQty <= 0 ||
+                (orderSide === 'SELL' && isAuthenticated && (sellableAssets.length === 0 || !currentSellAsset || parsedQty > currentSellAsset.quantity))
+              }
               className={orderSide === 'BUY' ? 'btn-lime' : 'btn-trade-sell'}
               style={{
                 width: '100%',
                 padding: '12px',
                 fontSize: '14px',
-                cursor: orderSubmitting ? 'not-allowed' : 'pointer',
+                cursor: (orderSubmitting || (orderSide === 'SELL' && isAuthenticated && (sellableAssets.length === 0 || !currentSellAsset || parsedQty > currentSellAsset.quantity))) ? 'not-allowed' : 'pointer',
+                opacity: (orderSide === 'SELL' && isAuthenticated && (sellableAssets.length === 0 || !currentSellAsset || parsedQty > currentSellAsset.quantity)) ? 0.6 : 1,
               }}
             >
               {orderSubmitting
                 ? 'Procesando Transacción...'
-                : isAuthenticated
-                ? (orderSide === 'BUY' ? `Confirmar Compra de ${parsedQty} ${selectedCoin}` : `Confirmar Venta de ${parsedQty} ${selectedCoin}`)
-                : 'Iniciar Sesión para Confirmar Orden'}
+                : !isAuthenticated
+                ? 'Iniciar Sesión para Confirmar Orden'
+                : orderSide === 'SELL' && sellableAssets.length === 0
+                ? 'No tienes activos para vender en tu billetera'
+                : orderSide === 'SELL' && currentSellAsset && parsedQty > currentSellAsset.quantity
+                ? `Cantidad excede posición (${currentSellAsset.quantity} ${selectedCoin} disp.)`
+                : orderSide === 'BUY'
+                ? `Confirmar Compra de ${parsedQty} ${selectedCoin}`
+                : `Confirmar Venta de ${parsedQty} ${selectedCoin}`}
             </button>
           </form>
         </div>
