@@ -96,15 +96,38 @@ function MainLayout() {
   });
   const [selectedTradingCoin, setSelectedTradingCoin] = useState('BTC');
 
-  // Datos de Criptomonedas (Market Service)
-  const [cryptos, setCryptos] = useState([]);
+  // Datos de Criptomonedas (Market Service con Hidratación Instantánea)
+  const [cryptos, setCryptos] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cryptopulse_cached_cryptos');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [cryptoLoading, setCryptoLoading] = useState(false);
   const [cryptoError, setCryptoError] = useState(null);
-  const [cryptoLastUpdated, setCryptoLastUpdated] = useState(null);
+  const [cryptoLastUpdated, setCryptoLastUpdated] = useState(() => {
+    return new Date().toLocaleTimeString('es-CO');
+  });
 
-  // Datos Forex (Market Service)
-  const [forexRates, setForexRates] = useState([]);
-  const [forexMap, setForexMap] = useState({});
+  // Datos Forex (Market Service con Hidratación Instantánea)
+  const [forexRates, setForexRates] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cryptopulse_cached_forex_rates');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [forexMap, setForexMap] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cryptopulse_cached_forex_map');
+      return cached ? JSON.parse(cached) : { COP: 4150, EUR: 0.92, USD: 1 };
+    } catch {
+      return { COP: 4150, EUR: 0.92, USD: 1 };
+    }
+  });
   const [forexBase, setForexBase] = useState('USD');
   const [forexLoading, setForexLoading] = useState(false);
   const [forexError, setForexError] = useState(null);
@@ -119,7 +142,12 @@ function MainLayout() {
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       const list = data.data || [];
-      setCryptos(list);
+      if (list.length > 0) {
+        setCryptos(list);
+        try {
+          localStorage.setItem('cryptopulse_cached_cryptos', JSON.stringify(list));
+        } catch {}
+      }
       setCryptoLastUpdated(new Date().toLocaleTimeString('es-CO'));
     } catch (err) {
       setCryptoError(err.message);
@@ -135,8 +163,13 @@ function MainLayout() {
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       const list = data.data || [];
+      const rates = data.rates || {};
       setForexRates(list);
-      setForexMap(data.rates || {});
+      setForexMap(rates);
+      try {
+        localStorage.setItem('cryptopulse_cached_forex_rates', JSON.stringify(list));
+        localStorage.setItem('cryptopulse_cached_forex_map', JSON.stringify(rates));
+      } catch {}
       setForexLastUpdated(new Date().toLocaleTimeString('es-CO'));
     } catch (err) {
       setForexError(err.message);
@@ -252,54 +285,77 @@ function MainLayout() {
                 </button>
               </div>
 
-              {/* Tarjetas de Métricas Resumen Dinámicas */}
-              {marketMetrics && (
-                <div className="metrics-grid">
-                  <div className="metric-card">
-                    <span className="metric-card__label">Activo Líder</span>
-                    <div className="metric-card__value">
-                      {marketMetrics.topCoin.name}
-                    </div>
-                    <div className="metric-card__sub text-mono text-positive">
-                      {formatMetricPrice(marketMetrics.topCoin.current_price)}
-                    </div>
-                  </div>
-
-                  <div className="metric-card">
-                    <span className="metric-card__label">Cap. Global Monitoreada</span>
-                    <div className="metric-card__value text-mono">
-                      {formatLarge(marketMetrics.totalMarketCap)}
-                    </div>
-                    <div className="metric-card__sub">
-                      Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
-                    </div>
-                  </div>
-
-                  <div className="metric-card">
-                    <span className="metric-card__label">Mayor Rendimiento (24h)</span>
-                    <div className="metric-card__value" style={{ color: 'var(--color-signal-teal)' }}>
-                      {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
-                    </div>
-                    {marketMetrics.topGainer && (
-                      <div className="metric-card__sub text-mono text-positive">
-                        <TrendingUpIcon size={13} />
-                        <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
+              {/* Tarjetas de Métricas Resumen Dinámicas con Altura Estable */}
+              <div className="metrics-grid" style={{ minHeight: '106px' }}>
+                {marketMetrics ? (
+                  <>
+                    <div className="metric-card">
+                      <span className="metric-card__label">Activo Líder</span>
+                      <div className="metric-card__value">
+                        {marketMetrics.topCoin.name}
                       </div>
-                    )}
-                  </div>
+                      <div className="metric-card__sub text-mono text-positive">
+                        {formatMetricPrice(marketMetrics.topCoin.current_price)}
+                      </div>
+                    </div>
 
-                  <div className="metric-card">
-                    <span className="metric-card__label">Sentimiento del Mercado</span>
-                    <div className="metric-card__value">
-                      {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
+                    <div className="metric-card">
+                      <span className="metric-card__label">Cap. Global Monitoreada</span>
+                      <div className="metric-card__value text-mono">
+                        {formatLarge(marketMetrics.totalMarketCap)}
+                      </div>
+                      <div className="metric-card__sub">
+                        Volumen 24h: {formatLarge(marketMetrics.totalVolume)}
+                      </div>
                     </div>
-                    <div className={`metric-card__sub text-mono ${marketMetrics.avgChange >= 0 ? 'text-positive' : 'text-negative'}`}>
-                      {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={13} /> : <TrendingDownIcon size={13} />}
-                      <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
+
+                    <div className="metric-card">
+                      <span className="metric-card__label">Mayor Rendimiento (24h)</span>
+                      <div className="metric-card__value" style={{ color: 'var(--color-signal-teal)' }}>
+                        {marketMetrics.topGainer ? marketMetrics.topGainer.symbol : '--'}
+                      </div>
+                      {marketMetrics.topGainer && (
+                        <div className="metric-card__sub text-mono text-positive">
+                          <TrendingUpIcon size={13} />
+                          <span>+{marketMetrics.topGainer.price_change_percentage_24h?.toFixed(2)}%</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-              )}
+
+                    <div className="metric-card">
+                      <span className="metric-card__label">Sentimiento del Mercado</span>
+                      <div className="metric-card__value">
+                        {marketMetrics.avgChange >= 0 ? 'Alcista (+)' : 'Bajista (-)'}
+                      </div>
+                      <div className={`metric-card__sub text-mono ${marketMetrics.avgChange >= 0 ? 'text-positive' : 'text-negative'}`}>
+                        {marketMetrics.avgChange >= 0 ? <TrendingUpIcon size={13} /> : <TrendingDownIcon size={13} />}
+                        <span>{marketMetrics.avgChange >= 0 ? '+' : ''}{marketMetrics.avgChange.toFixed(2)}% prom.</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="metric-card" style={{ opacity: 0.6 }}>
+                      <span className="metric-card__label">Activo Líder</span>
+                      <div className="metric-card__value">Bitcoin (BTC)</div>
+                      <div className="metric-card__sub text-mono text-positive">$...</div>
+                    </div>
+                    <div className="metric-card" style={{ opacity: 0.6 }}>
+                      <span className="metric-card__label">Cap. Global Monitoreada</span>
+                      <div className="metric-card__value text-mono">$...</div>
+                      <div className="metric-card__sub">Volumen 24h: ...</div>
+                    </div>
+                    <div className="metric-card" style={{ opacity: 0.6 }}>
+                      <span className="metric-card__label">Mayor Rendimiento (24h)</span>
+                      <div className="metric-card__value">...</div>
+                    </div>
+                    <div className="metric-card" style={{ opacity: 0.6 }}>
+                      <span className="metric-card__label">Sentimiento del Mercado</span>
+                      <div className="metric-card__value">Sincronizando...</div>
+                    </div>
+                  </>
+                )}
+              </div>
             </section>
 
             <CryptoMarket
