@@ -34,7 +34,7 @@ Abra en el navegador: http://localhost:5173 (o http://localhost:8080)
 CÓMO PROBARLO CON COMANDOS:
 ---------------------------
 # Ejecutar prueba integral del flujo de usuario (Registro, Billetera 1:1, Trading y Cartera):
-python tests/integration_linear_test.py
+pytest tests/test_simulations.py -v
 
 # Ejecutar validación de perfil, actualización de preferencias y catálogo extendido (+30 criptos):
 python tests/test_profile_and_features.py
@@ -172,6 +172,6 @@ B. Ejecución de todas las suites de verificación:
    pytest tests/test_load_balancing_config.py -v
    pytest tests/test_user_isolation.py -v
    pytest tests/test_simulations.py -v
-   python tests/integration_linear_test.py
-   python tests/test_profile_and_features.py
+   pytest tests/test_notifications.py -v
+   pytest tests/test_profile_and_features.py -v
 ================================================================================

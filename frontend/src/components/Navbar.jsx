@@ -7,7 +7,6 @@ export default function Navbar({
   onTabChange,
   currency,
   onCurrencyChange,
-  onOpenStatus,
   onOpenAuth,
   onOpenNotifications,
   unreadNotifCount = 0,

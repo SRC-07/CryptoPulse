@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, CloseIcon, CheckCircleIcon, AlertCircleIcon, RefreshIcon, TrendingUpIcon, TrendingDownIcon } from './Icons';
 
-export default function NotificationModal({ isOpen, onClose, onNewOrderNotification }) {
+export default function NotificationModal({ isOpen, onClose }) {
   const [notifications, setNotifications] = useState(() => {
     try {
       const saved = localStorage.getItem('cryptopulse_notifications');
@@ -89,51 +89,6 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
     try {
       localStorage.removeItem('cryptopulse_notifications');
     } catch {}
-  };
-
-  const triggerTestAlert = async (type = 'order') => {
-    try {
-      const payload = type === 'order' 
-        ? { type: 'order', symbol: 'BTC', action: 'BUY', price: 68450.0, quantity: 0.1 }
-        : { type: 'alert', symbol: 'ETH', price: 3420.0, target: 3400.0 };
-
-      const res = await fetch('/api/notifications/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.notification) {
-          setNotifications(prev => [data.notification, ...prev]);
-        }
-      } else {
-        // Fallback local
-        const localNotif = {
-          id: `notif-${Date.now()}`,
-          event: type === 'order' ? 'ORDER_EXECUTED' : 'PRICE_ALERT',
-          title: type === 'order' ? 'Orden BUY Simulada' : 'Alerta de Volatilidad: ETH',
-          message: type === 'order' ? 'Compra de 0.1 BTC a $68,450.00 USD ejecutada con éxito.' : 'Ethereum superó los $3,400 USD.',
-          type: type,
-          timestamp: Date.now() / 1000,
-          read: false,
-        };
-        setNotifications(prev => [localNotif, ...prev]);
-      }
-    } catch {
-      // Fallback local
-      const localNotif = {
-        id: `notif-${Date.now()}`,
-        event: 'TEST_EVENT',
-        title: 'Notificación de Prueba Local',
-        message: 'Evento generado desde el Centro de Notificaciones en el cliente.',
-        type: 'system',
-        timestamp: Date.now() / 1000,
-        read: false,
-      };
-      setNotifications(prev => [localNotif, ...prev]);
-    }
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -281,7 +236,7 @@ export default function NotificationModal({ isOpen, onClose, onNewOrderNotificat
                 No hay notificaciones en este filtro
               </div>
               <div style={{ fontSize: '12px', marginTop: '4px' }}>
-                Usa los botones superiores para simular eventos de prueba en vivo.
+                Las notificaciones aparecerán aquí cuando se ejecuten operaciones o alertas.
               </div>
             </div>
           ) : (

@@ -9,7 +9,6 @@ import PortfolioWatchlist from './components/PortfolioWatchlist';
 import RoiCalculator from './components/RoiCalculator';
 import UserProfile from './components/UserProfile';
 import AuthModal from './components/AuthModal';
-import SystemStatusModal from './components/SystemStatusModal';
 import NotificationModal from './components/NotificationModal';
 import { TrendingUpIcon, TrendingDownIcon } from './components/Icons';
 
@@ -82,7 +81,6 @@ function MainLayout() {
   }, [activeTab]);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(() => {
     try {
@@ -248,7 +246,6 @@ function MainLayout() {
         onTabChange={setActiveTab}
         currency={currency}
         onCurrencyChange={setCurrency}
-        onOpenStatus={() => setStatusModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
         onOpenNotifications={() => setNotificationModalOpen(true)}
         unreadNotifCount={unreadNotifCount}
@@ -428,13 +425,7 @@ function MainLayout() {
         onClose={() => setAuthModalOpen(false)}
       />
 
-      {/* Modal de Diagnóstico de Disponibilidad en Tiempo Real (ISO 9126: Confiabilidad) */}
-      <SystemStatusModal
-        isOpen={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-      />
-
-      {/* Centro de Notificaciones & Alertas (Entrega Final) */}
+      {/* Centro de Notificaciones & Alertas */}
       <NotificationModal
         isOpen={notificationModalOpen}
         onClose={() => {

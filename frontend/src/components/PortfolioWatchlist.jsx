@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   PlusIcon,
-  TrashIcon,
   TrendingUpIcon,
   TrendingDownIcon,
   RefreshIcon,
