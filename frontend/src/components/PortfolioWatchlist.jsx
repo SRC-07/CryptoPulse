@@ -171,7 +171,7 @@ export default function PortfolioWatchlist({
 
     if (orderSide === 'SELL') {
       if (sellableAssets.length === 0) {
-        setOrderFeedback({ type: 'error', message: 'No tienes activos en tu billetera para vender.' });
+        setOrderFeedback({ type: 'error', message: 'No dispones de activos en tu billetera para vender.' });
         return;
       }
       if (!currentSellAsset) {
@@ -494,7 +494,7 @@ export default function PortfolioWatchlist({
               </div>
               <p style={{ fontSize: '13px', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.6 }}>
                 {isAuthenticated
-                  ? `Tienes ${formatFiat(fiatBalance)} disponibles. Ejecuta una orden de compra para adquirir tus primeras criptomonedas a precio de mercado en vivo.`
+                  ? `Dispones de ${formatFiat(fiatBalance)} para operar. Ejecuta una orden de compra para adquirir tus primeras criptomonedas a precio de mercado en vivo.`
                   : 'Inicia sesión para operar con tu saldo de $10,000 USD a cotizaciones en vivo.'}
               </p>
               <button
@@ -763,7 +763,7 @@ export default function PortfolioWatchlist({
                           const name = a.coin_name || meta?.name || a.symbol;
                           return (
                             <option key={a.symbol} value={a.symbol}>
-                              {name} ({a.symbol}) &bull; Tienes: {a.quantity} &bull; ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              {name} ({a.symbol}) &bull; {a.quantity} &bull; ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </option>
                           );
                         })}
@@ -905,7 +905,7 @@ export default function PortfolioWatchlist({
                 : !isAuthenticated
                 ? 'Iniciar Sesión para Confirmar Orden'
                 : orderSide === 'SELL' && sellableAssets.length === 0
-                ? 'No tienes activos para vender en tu billetera'
+                ? 'Sin activos para vender en tu billetera'
                 : orderSide === 'SELL' && currentSellAsset && parsedQty > currentSellAsset.quantity
                 ? `Cantidad excede posición (${currentSellAsset.quantity} ${selectedCoin} disp.)`
                 : orderSide === 'BUY'
